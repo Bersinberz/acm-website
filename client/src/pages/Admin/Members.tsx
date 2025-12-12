@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Sidebar from "../../components/Sidebar";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -7,8 +7,10 @@ import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
 import Loader from "../../components/Loader";
 import Message from "../../components/Message";
+import { createMember, getMembers, deleteMember, updateMember } from "../../services/admin/membersService";
 
 interface Member {
+    _id?: string;
     name: string;
     designation: string;
     batch: string;
@@ -27,34 +29,6 @@ interface ToastState {
     text: string;
     variant: ToastVariant;
 }
-
-const membersData: Member[] = [
-    {
-        name: "Rahul Kumar",
-        designation: "CHAIRPERSON",
-        batch: "2022–2026",
-        profilePic: "https://ui-avatars.com/api/?name=Rahul+Kumar&background=0D8ABC&color=fff",
-        social: {
-            linkedin: "https://linkedin.com",
-            instagram: "https://instagram.com",
-            facebook: "https://facebook.com",
-        },
-    },
-    {
-        name: "Priya Sharma",
-        designation: "VICE CHAIRPERSON",
-        batch: "2021–2025",
-        profilePic: "https://ui-avatars.com/api/?name=Priya+Sharma&background=6c757d&color=fff",
-        social: { instagram: "#" },
-    },
-    {
-        name: "Ankit Verma",
-        designation: "Volunteer Unit",
-        batch: "2023–2027",
-        profilePic: "https://ui-avatars.com/api/?name=Ankit+Verma&background=28a745&color=fff",
-        social: { instagram: "#" },
-    },
-];
 
 // Canvas crop function
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -109,7 +83,7 @@ const Members = () => {
     const [activePage, setActivePage] = useState("Members");
     const [expandedRow, setExpandedRow] = useState<number | null>(null);
     const [showModal, setShowModal] = useState(false);
-    const [members, setMembers] = useState<Member[]>(membersData);
+    const [members, setMembers] = useState<Member[]>([]);
     const [newMember, setNewMember] = useState<Member>({
         name: "",
         designation: "",
@@ -122,6 +96,8 @@ const Members = () => {
         }
     });
     const [imagePreview, setImagePreview] = useState<string>("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
 
     // New state for crop modal
     const [showCropModal, setShowCropModal] = useState(false);
@@ -130,6 +106,11 @@ const Members = () => {
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editMember, setEditMember] = useState<Member | null>(null);
+    const [editImagePreview, setEditImagePreview] = useState<string>("");
+    const [editImageCropMode, setEditImageCropMode] = useState(false);
+
     // New states for loader and toast
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState<ToastState>({
@@ -137,6 +118,95 @@ const Members = () => {
         text: "",
         variant: "info"
     });
+
+    // NEW: Filter states
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterDesignation, setFilterDesignation] = useState("");
+    const [filterBatch, setFilterBatch] = useState("");
+
+    // Generate unique designations and batches from members
+    const uniqueDesignations = useMemo(() => {
+        const designations = members.map(m => m.designation);
+        return Array.from(new Set(designations)).sort();
+    }, [members]);
+
+    const uniqueBatches = useMemo(() => {
+        const batches = members.map(m => m.batch);
+        return Array.from(new Set(batches)).sort();
+    }, [members]);
+
+    // Filtering logic
+    const filteredMembers = useMemo(() => {
+        return members.filter(member => {
+            // Search by name (case-insensitive, partial match)
+            const matchesSearch = searchTerm === "" ||
+                member.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+            // Filter by designation
+            const matchesDesignation = filterDesignation === "" ||
+                member.designation === filterDesignation;
+
+            // Filter by batch
+            const matchesBatch = filterBatch === "" ||
+                member.batch === filterBatch;
+
+            return matchesSearch && matchesDesignation && matchesBatch;
+        });
+    }, [members, searchTerm, filterDesignation, filterBatch]);
+
+    const handleEditClick = (member: Member) => {
+        setEditMember(member);
+        setEditImagePreview(member.profilePic);
+        setShowEditModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!memberToDelete?._id) return;
+        try {
+            setLoading(true);
+            await deleteMember(memberToDelete._id);
+
+            setMembers(prev => prev.filter(m => m._id !== memberToDelete._id));
+
+            showToast("Member deleted successfully!", "success");
+        } catch (err) {
+            showToast("Failed to delete member", "error");
+        } finally {
+            setLoading(false);
+            setShowDeleteModal(false);
+            setMemberToDelete(null);
+        }
+    };
+
+    useEffect(() => {
+        const loadMembers = async () => {
+            try {
+                setLoading(true);
+                const data = await getMembers();
+
+                setMembers(
+                    data.map((m: any) => ({
+                        name: m.name,
+                        designation: m.designation,
+                        batch: m.batch,
+                        profilePic: m.imageUrl,
+                        social: {
+                            linkedin: m.linkedin,
+                            instagram: m.instagram,
+                            facebook: m.facebook
+                        },
+                        _id: m._id
+                    }))
+                );
+            } catch (error) {
+                showToast("Failed to load members", "error");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadMembers();
+    }, []);
 
     const navigate = useNavigate();
     const handleLogout = () => navigate("/admin/login");
@@ -151,7 +221,6 @@ const Members = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const result = reader.result as string;
-                // Instead of setting preview immediately, open crop modal
                 setImageToCrop(result);
                 setShowCropModal(true);
             };
@@ -189,7 +258,15 @@ const Members = () => {
 
             // Set the cropped image as preview and profile picture
             setImagePreview(croppedImage);
-            setNewMember({ ...newMember, profilePic: croppedImage });
+            if (editImageCropMode) {
+                setEditImagePreview(croppedImage);
+                setEditMember({ ...editMember!, profilePic: croppedImage });
+                setEditImageCropMode(false);
+            } else {
+                setImagePreview(croppedImage);
+                setNewMember({ ...newMember, profilePic: croppedImage });
+            }
+
 
             // Close crop modal
             setShowCropModal(false);
@@ -227,21 +304,49 @@ const Members = () => {
 
     const handleAddMember = async () => {
         if (!newMember.name.trim() || !newMember.designation.trim() || !newMember.batch.trim()) {
-            alert("Please fill in all required fields");
+            showToast("Please fill all required fields", "error");
             return;
         }
 
         try {
             setLoading(true);
-            await new Promise(r => setTimeout(r, 700));
 
-            // If no image uploaded, use default avatar
-            if (!newMember.profilePic.trim()) {
-                const nameForAvatar = newMember.name.trim() || "New Member";
-                newMember.profilePic = `https://ui-avatars.com/api/?name=${encodeURIComponent(nameForAvatar)}&background=1f2937&color=fff`;
+            let fileToUpload: File | null = null;
+
+            // Convert cropped blob URL → File (for FormData)
+            if (newMember.profilePic) {
+                const response = await fetch(newMember.profilePic);
+                const blob = await response.blob();
+                fileToUpload = new File([blob], `${newMember.name.replace(" ", "_")}.jpg`, { type: "image/jpeg" });
             }
 
-            setMembers([...members, newMember]);
+            // Prepare API payload
+            const payload = {
+                name: newMember.name,
+                designation: newMember.designation,
+                batch: newMember.batch,
+                profilePic: fileToUpload,
+                linkedin: newMember.social.linkedin,
+                instagram: newMember.social.instagram,
+                facebook: newMember.social.facebook,
+            };
+
+            const result = await createMember(payload);
+
+            setMembers((prev) => [
+                ...prev,
+                {
+                    name: result.name,
+                    designation: result.designation,
+                    batch: result.batch,
+                    profilePic: result.imageUrl, // must return from backend
+                    social: {
+                        linkedin: result.linkedin,
+                        instagram: result.instagram,
+                        facebook: result.facebook,
+                    }
+                }
+            ]);
 
             // Reset form
             setNewMember({
@@ -258,8 +363,10 @@ const Members = () => {
             setImagePreview("");
             setShowModal(false);
 
-            showToast("Member added successfully", "success");
+            showToast("Member added successfully!", "success");
+
         } catch (error) {
+            console.error(error);
             showToast("Failed to add member", "error");
         } finally {
             setLoading(false);
@@ -429,7 +536,74 @@ const Members = () => {
                     color: #95a9bcff !important;
                     font-style: italic;
                 }
+
+                .delete-modal-backdrop {
+                    background: rgba(0,0,0,0.65);
+                    animation: fadeIn 0.3s ease-out;
+                }
+
+                .delete-modal-animate {
+                    animation: scaleIn 0.28s cubic-bezier(0.34, 1.5, 0.64, 1);
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                @keyframes scaleIn {
+                    from { transform: scale(0.85); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
             `}</style>
+
+
+            {showDeleteModal && (
+                <div className="modal fade show d-block delete-modal-backdrop" tabIndex={-1}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content bg-dark text-light border border-secondary delete-modal-animate">
+
+                            <div className="modal-header border-secondary">
+                                <h5 className="modal-title text-danger fw-bold">
+                                    <i className="bi bi-exclamation-triangle me-2"></i>
+                                    Confirm Delete
+                                </h5>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={() => setShowDeleteModal(false)}
+                                ></button>
+                            </div>
+
+                            <div className="modal-body">
+                                <p className="mb-2">
+                                    Are you sure you want to delete <strong>{memberToDelete?.name}</strong>?
+                                </p>
+                                <p className="text-secondary small">
+                                    This action cannot be undone.
+                                </p>
+                            </div>
+
+                            <div className="modal-footer border-secondary">
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowDeleteModal(false)}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={confirmDelete}
+                                >
+                                    <i className="bi bi-trash me-2"></i> Delete
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Sidebar
                 active={activePage}
@@ -453,111 +627,236 @@ const Members = () => {
                     </button>
                 </header>
 
-                <div className="d-flex flex-column gap-3">
-                    {members.map((member, index) => {
-                        const isOpen = expandedRow === index;
-
-                        return (
-                            <div
-                                key={index}
-                                className={`member-card rounded-3 shadow-sm ${isOpen ? 'border-primary border-opacity-50' : ''}`}
-                            >
-                                {/* --- Card Header--- */}
-                                <div
-                                    className="p-3 d-flex justify-content-between align-items-center"
-                                    onClick={() => toggleExpand(index)}
-                                    style={{ cursor: "pointer" }}
+                {/* NEW: Filter Section */}
+                <div className="row mb-4 g-3">
+                    <div className="col-md-4">
+                        <div className="input-group">
+                            <span className="input-group-text bg-secondary border-secondary text-light">
+                                <i className="bi bi-search"></i>
+                            </span>
+                            <input
+                                type="text"
+                                className="form-control bg-secondary border-secondary text-light"
+                                placeholder="Search by name..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <button
+                                    className="btn btn-outline-secondary text-light"
+                                    onClick={() => setSearchTerm("")}
                                 >
-                                    <div className="d-flex align-items-center gap-3">
-                                        {/* Profile Pic */}
-                                        <div className="col-auto">
-                                            <img
-                                                src={member.profilePic}
-                                                alt={member.name}
-                                                className="rounded-circle border border-2 border-secondary"
-                                                width="50"
-                                                height="50"
-                                                style={{ objectFit: 'cover' }}
-                                            />
-                                        </div>
+                                    <i className="bi bi-x"></i>
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    <div className="col-md-4">
+                        <select
+                            className="form-select bg-secondary border-secondary text-light"
+                            value={filterDesignation}
+                            onChange={(e) => setFilterDesignation(e.target.value)}
+                        >
+                            <option value="">All Designations</option>
+                            {uniqueDesignations.map((designation, index) => (
+                                <option key={index} value={designation}>
+                                    {designation}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="col-md-4">
+                        <select
+                            className="form-select bg-secondary border-secondary text-light"
+                            value={filterBatch}
+                            onChange={(e) => setFilterBatch(e.target.value)}
+                        >
+                            <option value="">All Batches</option>
+                            {uniqueBatches.map((batch, index) => (
+                                <option key={index} value={batch}>
+                                    {batch}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
 
-                                        <div>
-                                            <h5 className="mb-2 fw-bold text-white fs-5">{member.name}</h5>
-                                            <div className="d-flex gap-2 align-items-center">
-                                                <span className="badge bg-primary bg-opacity-25 text-primary-emphasis" style={{ fontSize: '0.75rem' }}>
-                                                    {member.designation}
-                                                </span>
-                                                <small className="text-secondary" style={{ fontSize: '0.8rem' }}>
-                                                    {member.batch}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button className="btn btn-link text-secondary text-decoration-none p-0">
-                                        <i className={`chevron-icon fs-5 ${isOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
-                                    </button>
+                {/* Filter summary */}
+                {(searchTerm || filterDesignation || filterBatch) && (
+                    <div className="mb-3 p-3 bg-dark bg-opacity-50 rounded border border-secondary">
+                        <div className="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span className="text-secondary">Showing {filteredMembers.length} of {members.length} members</span>
+                                <div className="mt-1 d-flex gap-2 flex-wrap">
+                                    {searchTerm && (
+                                        <span className="badge bg-info bg-opacity-25 text-info">
+                                            Search: "{searchTerm}"
+                                        </span>
+                                    )}
+                                    {filterDesignation && (
+                                        <span className="badge bg-primary bg-opacity-25 text-primary">
+                                            Designation: {filterDesignation}
+                                        </span>
+                                    )}
+                                    {filterBatch && (
+                                        <span className="badge bg-warning bg-opacity-25 text-warning">
+                                            Batch: {filterBatch}
+                                        </span>
+                                    )}
                                 </div>
+                            </div>
+                            <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => {
+                                    setSearchTerm("");
+                                    setFilterDesignation("");
+                                    setFilterBatch("");
+                                }}
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                )}
 
-                                {/* --- Expandable Content --- */}
-                                <div className={`expandable-wrapper ${isOpen ? "open" : ""}`}>
-                                    <div className="expandable-inner">
-                                        <div className="p-3 pt-0">
-                                            <hr className="border-secondary opacity-25 my-2" />
+                <div className="d-flex flex-column gap-3">
+                    {/* UPDATED: Use filteredMembers instead of members */}
+                    {filteredMembers.length === 0 ? (
+                        <div className="text-center py-5">
+                            <i className="bi bi-people-fill fs-1 text-secondary"></i>
+                            <p className="mt-3 text-secondary">No members found matching your filters.</p>
+                            {(searchTerm || filterDesignation || filterBatch) && (
+                                <button
+                                    className="btn btn-outline-secondary mt-2"
+                                    onClick={() => {
+                                        setSearchTerm("");
+                                        setFilterDesignation("");
+                                        setFilterBatch("");
+                                    }}
+                                >
+                                    Clear filters
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        filteredMembers.map((member, index) => {
+                            const isOpen = expandedRow === index;
 
-                                            <div className="row mt-3 align-items-center">
+                            return (
+                                <div
+                                    key={index}
+                                    className={`member-card rounded-3 shadow-sm ${isOpen ? 'border-primary border-opacity-50' : ''}`}
+                                >
+                                    {/* --- Card Header--- */}
+                                    <div
+                                        className="p-3 d-flex justify-content-between align-items-center"
+                                        onClick={() => toggleExpand(index)}
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        <div className="d-flex align-items-center gap-3">
+                                            {/* Profile Pic */}
+                                            <div className="col-auto">
+                                                <img
+                                                    src={member.profilePic}
+                                                    alt={member.name}
+                                                    className="rounded-circle border border-2 border-secondary"
+                                                    width="50"
+                                                    height="50"
+                                                    style={{ objectFit: 'cover' }}
+                                                />
+                                            </div>
 
-                                                {/* Details */}
-                                                <div className="col">
-                                                    <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
-
-                                                        {/* Social Links */}
-                                                        <div>
-                                                            <h6 className="text-uppercase text-secondary small fw-bold mb-2">Connect</h6>
-                                                            <div className="d-flex gap-3 fs-5 bg-dark bg-opacity-50 px-3 py-1 rounded-pill">
-                                                                {member.social.linkedin && (
-                                                                    <a href={member.social.linkedin} className="social-icon text-info" target="_blank" rel="noreferrer">
-                                                                        <i className="bi bi-linkedin"></i>
-                                                                    </a>
-                                                                )}
-                                                                {member.social.instagram && (
-                                                                    <a href={member.social.instagram} className="social-icon text-danger" target="_blank" rel="noreferrer">
-                                                                        <i className="bi bi-instagram"></i>
-                                                                    </a>
-                                                                )}
-                                                                {member.social.facebook && (
-                                                                    <a href={member.social.facebook} className="social-icon text-primary" target="_blank" rel="noreferrer">
-                                                                        <i className="bi bi-facebook"></i>
-                                                                    </a>
-                                                                )}
-                                                                {!member.social.linkedin && !member.social.instagram && !member.social.facebook && (
-                                                                    <span className="text-secondary fs-6">No links</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Action Buttons */}
-                                                        <div className="d-flex gap-2">
-                                                            <button className="btn btn-sm btn-outline-info d-flex align-items-center gap-2">
-                                                                <i className="bi bi-pencil-square"></i> Edit
-                                                            </button>
-                                                            <button className="btn btn-sm btn-outline-danger d-flex align-items-center gap-2">
-                                                                <i className="bi bi-trash"></i> Delete
-                                                            </button>
-                                                        </div>
-
-                                                    </div>
+                                            <div>
+                                                <h5 className="mb-2 fw-bold text-white fs-5">{member.name}</h5>
+                                                <div className="d-flex gap-2 align-items-center">
+                                                    <span className="badge bg-primary bg-opacity-25 text-primary-emphasis" style={{ fontSize: '0.75rem' }}>
+                                                        {member.designation}
+                                                    </span>
+                                                    <small className="text-secondary" style={{ fontSize: '0.8rem' }}>
+                                                        {member.batch}
+                                                    </small>
                                                 </div>
                                             </div>
+                                        </div>
 
+                                        <button className="btn btn-link text-secondary text-decoration-none p-0">
+                                            <i className={`chevron-icon fs-5 ${isOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+                                        </button>
+                                    </div>
+
+                                    {/* --- Expandable Content --- */}
+                                    <div className={`expandable-wrapper ${isOpen ? "open" : ""}`}>
+                                        <div className="expandable-inner">
+                                            <div className="p-3 pt-0">
+                                                <hr className="border-secondary opacity-25 my-2" />
+
+                                                <div className="row mt-3 align-items-center">
+
+                                                    {/* Details */}
+                                                    <div className="col">
+                                                        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
+
+                                                            {/* Social Links */}
+                                                            <div>
+                                                                <h6 className="text-uppercase text-secondary small fw-bold mb-2">Connect</h6>
+                                                                <div className="d-flex gap-3 fs-5 bg-dark bg-opacity-50 px-3 py-1 rounded-pill">
+                                                                    {member.social.linkedin && (
+                                                                        <a href={member.social.linkedin} className="social-icon text-info" target="_blank" rel="noreferrer">
+                                                                            <i className="bi bi-linkedin"></i>
+                                                                        </a>
+                                                                    )}
+                                                                    {member.social.instagram && (
+                                                                        <a href={member.social.instagram} className="social-icon text-danger" target="_blank" rel="noreferrer">
+                                                                            <i className="bi bi-instagram"></i>
+                                                                        </a>
+                                                                    )}
+                                                                    {member.social.facebook && (
+                                                                        <a href={member.social.facebook} className="social-icon text-primary" target="_blank" rel="noreferrer">
+                                                                            <i className="bi bi-facebook"></i>
+                                                                        </a>
+                                                                    )}
+                                                                    {!member.social.linkedin && !member.social.instagram && !member.social.facebook && (
+                                                                        <span className="text-secondary fs-6">No links</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Action Buttons */}
+                                                            <div className="d-flex gap-2">
+                                                                <button
+                                                                    className="btn btn-sm btn-outline-info d-flex align-items-center gap-2"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleEditClick(member);
+                                                                    }}
+                                                                >
+                                                                    <i className="bi bi-pencil-square"></i> Edit
+                                                                </button>
+                                                                <button
+                                                                    className="btn btn-sm btn-outline-danger d-flex align-items-center gap-2"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setMemberToDelete(member);
+                                                                        setShowDeleteModal(true);
+                                                                    }}
+                                                                >
+                                                                    <i className="bi bi-trash"></i> Delete
+                                                                </button>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                {/* End Expandable */}
+                                    {/* End Expandable */}
 
-                            </div>
-                        );
-                    })}
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
             </div>
 
@@ -636,6 +935,225 @@ const Members = () => {
                     </div>
                 </div>
             </div>
+            {showEditModal && editMember && (
+                <div
+                    className="modal fade show d-block"
+                    style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                >
+                    <div className="modal-dialog modal-lg modal-dialog-centered">
+                        <div className="modal-content bg-dark text-light border border-secondary shadow-lg">
+
+                            <div className="modal-header border-secondary">
+                                <h5 className="modal-title fw-bold">Edit Member</h5>
+                                <button
+                                    type="button"
+                                    className="btn-close btn-close-white"
+                                    onClick={() => setShowEditModal(false)}
+                                ></button>
+                            </div>
+
+                            <div className="modal-body">
+                                <div className="row">
+
+                                    {/* LEFT COLUMN — PHOTO */}
+                                    <div className="col-md-4 d-flex flex-column align-items-center">
+                                        <div
+                                            className="border border-secondary mb-3"
+                                            style={{
+                                                width: "150px",
+                                                height: "215px",
+                                                overflow: "hidden",
+                                                borderRadius: "6px",
+                                                backgroundColor: "#2d3748"
+                                            }}
+                                        >
+                                            {editImagePreview ? (
+                                                <img
+                                                    src={editImagePreview}
+                                                    className="w-100 h-100"
+                                                    style={{ objectFit: "cover" }}
+                                                />
+                                            ) : (
+                                                <i className="bi bi-person text-secondary fs-1"></i>
+                                            )}
+                                        </div>
+
+                                        <label className="btn btn-outline-warning btn-sm">
+                                            <i className="bi bi-pencil-square me-2"></i> Change Photo
+                                            <input
+                                                type="file"
+                                                className="d-none"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setImageToCrop(reader.result as string);
+                                                            setEditImageCropMode(true);
+                                                            setShowCropModal(true);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
+
+                                    {/* RIGHT COLUMN — FORM */}
+                                    <div className="col-md-8">
+                                        <div className="mb-3">
+                                            <label className="form-label">Name *</label>
+                                            <input
+                                                type="text"
+                                                className="form-control bg-secondary border-secondary text-light"
+                                                value={editMember.name}
+                                                onChange={(e) =>
+                                                    setEditMember({ ...editMember, name: e.target.value })
+                                                }
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="form-label">Designation *</label>
+                                            <select
+                                                className="form-select bg-secondary border-secondary text-light"
+                                                value={editMember.designation}
+                                                onChange={(e) =>
+                                                    setEditMember({ ...editMember, designation: e.target.value })
+                                                }
+                                            >
+                                                <option disabled>Select designation</option>
+                                                <option value="Chairperson">Chairperson</option>
+                                                <option value="Vice Chairperson">Vice Chairperson</option>
+                                                <option value="Treasurer">Treasurer</option>
+                                                <option value="Secretary">Secretary</option>
+                                                <option value="Core Team Member">Core Team Member</option>
+                                                <option value="HOD CSE">HOD CSE</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">Batch *</label>
+                                            <select
+                                                className="form-select bg-secondary border-secondary text-light"
+                                                value={editMember.batch}
+                                                onChange={(e) =>
+                                                    setEditMember({ ...editMember, batch: e.target.value })
+                                                }
+                                            >
+                                                <option disabled>Select batch</option>
+                                                <option value="2024–2025">2024–2025</option>
+                                                <option value="2025–2026">2025–2026</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">LinkedIn</label>
+                                            <input
+                                                type="text"
+                                                className="form-control bg-secondary border-secondary text-light"
+                                                value={editMember.social.linkedin}
+                                                onChange={(e) =>
+                                                    setEditMember({
+                                                        ...editMember,
+                                                        social: { ...editMember.social, linkedin: e.target.value }
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">Instagram</label>
+                                            <input
+                                                type="text"
+                                                className="form-control bg-secondary border-secondary text-light"
+                                                value={editMember.social.instagram}
+                                                onChange={(e) =>
+                                                    setEditMember({
+                                                        ...editMember,
+                                                        social: { ...editMember.social, instagram: e.target.value }
+                                                    })
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className="mb-3">
+                                            <label className="form-label">Facebook</label>
+                                            <input
+                                                type="text"
+                                                className="form-control bg-secondary border-secondary text-light"
+                                                value={editMember.social.facebook}
+                                                onChange={(e) =>
+                                                    setEditMember({
+                                                        ...editMember,
+                                                        social: { ...editMember.social, facebook: e.target.value }
+                                                    })
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <div className="modal-footer border-secondary">
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowEditModal(false)}
+                                >
+                                    Cancel
+                                </button>
+
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={async () => {
+                                        try {
+                                            setLoading(true);
+
+                                            let fileToUpload: File | null = null;
+
+                                            if (editImagePreview !== editMember.profilePic) {
+                                                const res = await fetch(editImagePreview);
+                                                const blob = await res.blob();
+                                                fileToUpload = new File([blob], "updated.jpg", {
+                                                    type: "image/jpeg",
+                                                });
+                                            }
+
+                                            const updated = await updateMember(editMember._id!, {
+                                                name: editMember.name,
+                                                designation: editMember.designation,
+                                                batch: editMember.batch,
+                                                linkedin: editMember.social.linkedin,
+                                                instagram: editMember.social.instagram,
+                                                facebook: editMember.social.facebook,
+                                                profilePic: fileToUpload || undefined
+                                            });
+
+                                            // Update UI list
+                                            setMembers(prev =>
+                                                prev.map(m =>
+                                                    m._id === updated._id ? updated : m
+                                                )
+                                            );
+
+                                            showToast("Member updated!", "success");
+                                            setShowEditModal(false);
+                                        } catch (err) {
+                                            showToast("Failed to update member", "error");
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Add Member Modal */}
             <div className={`modal fade ${showModal ? 'show d-block' : ''}`} style={{ backgroundColor: showModal ? 'rgba(0,0,0,0.6)' : 'transparent' }}>

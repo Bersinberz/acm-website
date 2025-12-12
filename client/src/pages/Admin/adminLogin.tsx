@@ -30,7 +30,7 @@ const AdminLogin = () => {
                 setMessage({ variant: "success", text: "Login successful!" });
 
                 setTimeout(() => {
-                    navigate("/dashboard"); 
+                    navigate("/admin/dashboard"); 
                 }, 1000);
 
             } else {

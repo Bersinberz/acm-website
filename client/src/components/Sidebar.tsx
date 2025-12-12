@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ active, onLogout }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const navigate = useNavigate();
   const menuItems = [
-    { label: "Dashboard", icon: "bi-speedometer2", path: "" },
+    { label: "Dashboard", icon: "bi-speedometer2", path: "/admin/dashboard" },
     { label: "Members", icon: "bi-people-fill", path: "/admin/members" },
     { label: "Events", icon: "bi-calendar-event-fill", path: "" },
     { label: "Analytics", icon: "bi-graph-up-arrow", path: "" },
