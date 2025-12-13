@@ -4,9 +4,9 @@ import { upload } from "../middleware/upload";
 
 const router = express.Router();
 
-router.post("/members/add", upload.single("profilePic"), createMember);
-router.get("/members/getAll", getMembers);
-router.delete("/members/:id", deleteMember);
-router.put("/members/:id", upload.single("profilePic"), updateMember);
+router.post("/add", upload.single("profilePic"), createMember);
+router.get("/getAll", getMembers);
+router.delete("/:id", deleteMember);
+router.put("/:id", upload.single("profilePic"), updateMember);
 
 export default router;

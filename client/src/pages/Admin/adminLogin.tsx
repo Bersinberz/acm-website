@@ -65,8 +65,6 @@ const AdminLogin = () => {
                             variant={message.variant}
                             duration={2500}
                             onClose={() => setMessage(null)}
-                            dismissible
-                            className="w-100"
                         >
                             {message.text}
                         </Message>

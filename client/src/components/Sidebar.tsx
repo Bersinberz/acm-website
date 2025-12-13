@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ active, onLogout }) => {
   const menuItems = [
     { label: "Dashboard", icon: "bi-speedometer2", path: "/admin/dashboard" },
     { label: "Members", icon: "bi-people-fill", path: "/admin/members" },
-    { label: "Events", icon: "bi-calendar-event-fill", path: "" },
+    { label: "Events", icon: "bi-calendar-event-fill", path: "/admin/eventmanager" },
     { label: "Analytics", icon: "bi-graph-up-arrow", path: "" },
     { label: "Settings", icon: "bi-gear-fill", path: "" },
   ];
