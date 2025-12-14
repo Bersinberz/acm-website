@@ -6,6 +6,7 @@ import cors from "cors";
 import fs from "fs";
 import memberRoutes from "./Routes/memberRoutes";
 import eventmanagerRoutes from "./Routes/EventmanagerRoutes"
+import recruitmentsRouter from "./Routes/recruitmentRoutes"
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/uploads", express.static(uploadsPath));
 // API Routes
 app.use("/api/admin/members", memberRoutes);
 app.use("/api/admin/eventmanager", eventmanagerRoutes);
+app.use("/api/admin/recruitments", recruitmentsRouter)
 
 // Root endpoint check
 app.get("/", (_, res) => {
