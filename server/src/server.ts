@@ -7,6 +7,8 @@ import fs from "fs";
 import memberRoutes from "./Routes/memberRoutes";
 import eventmanagerRoutes from "./Routes/EventmanagerRoutes"
 import recruitmentsRouter from "./Routes/recruitmentRoutes"
+import dashboardRoutes from "./Routes/DashboardRoutes"
+import adminSettingsRoutes from "./Routes/adminSettingsRoutes";
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ app.use("/uploads", express.static(uploadsPath));
 app.use("/api/admin/members", memberRoutes);
 app.use("/api/admin/eventmanager", eventmanagerRoutes);
 app.use("/api/admin/recruitments", recruitmentsRouter)
+app.use("/api/admin/dashboard", dashboardRoutes)
+app.use("/api/admin/settings", adminSettingsRoutes);
 
 // Root endpoint check
 app.get("/", (_, res) => {

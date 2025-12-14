@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
+import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -10,6 +11,7 @@ import {
   CartesianGrid,
   Cell,
 } from "recharts";
+import { getDashboardData, syncDashboard } from "../../services/admin/dashboardService";
 
 /* ---------------- TYPES ---------------- */
 interface DashboardStats {
@@ -19,27 +21,23 @@ interface DashboardStats {
   totalEvents: number;
 }
 
-interface RecentMember {
-  name: string;
-  joinedAt: string;
-  role: string;
-}
-
-interface Requirement {
-  id: number;
-  title: string;
-  category: "Manpower" | "Technical" | "Finance" | "Outreach";
-  priority: "High" | "Medium" | "Low";
-  status: "Open" | "In Progress";
-}
-
 interface UpcomingEvent {
-  id: number;
+  _id: string;
   name: string;
   date: string;
   time: string;
   venue: string;
+  contactPersons?: { name: string; phone: string }[];
 }
+
+
+interface OngoingRecruitment {
+  _id: string;
+  title: string;
+  role: string;
+  createdAt: string;
+}
+
 
 /* ---------------- COMPONENT ---------------- */
 const Dashboard: React.FC = () => {
@@ -50,71 +48,42 @@ const Dashboard: React.FC = () => {
     upcomingEvents: 0,
     totalEvents: 0,
   });
-  const [recentMembers, setRecentMembers] = useState<RecentMember[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [eventTrends, setEventTrends] = useState<any[]>([]);
-  const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [upcomingEvent, setUpcomingEvent] = useState<UpcomingEvent | null>(null);
-  const [eventVisibility, setEventVisibility] = useState({
-    visible: 18,
-    hidden: 6,
-  });
+  const [ongoingRecruitments, setOngoingRecruitments] =
+    useState<OngoingRecruitment[]>([]);
+  const navigate = useNavigate();
+
 
   /* ---------------- FETCH (MOCK) ---------------- */
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      const data = await getDashboardData();
+
+      setStats(data.stats);
+      setUpcomingEvent(data.latestEvent);
+      setOngoingRecruitments(data.ongoingRecruitments);
+      setEventTrends(data.eventTrends);
+      setRecentActivity(data.recentActivity);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-        await new Promise((r) => setTimeout(r, 400));
-
-        setStats({
-          totalMembers: 86,
-          ongoingEvents: 1,
-          upcomingEvents: 3,
-          totalEvents: 24,
-        });
-
-        setRecentMembers([
-          { name: "Arun Kumar", role: "Student", joinedAt: "2 hrs ago" },
-          { name: "Sneha R", role: "Volunteer", joinedAt: "5 hrs ago" },
-          { name: "Vignesh S", role: "Student", joinedAt: "1 day ago" },
-          { name: "Pavithra M", role: "Core Member", joinedAt: "2 days ago" },
-        ]);
-
-        setEventTrends([
-          { month: "Jan", events: 2 },
-          { month: "Feb", events: 4 },
-          { month: "Mar", events: 3 },
-          { month: "Apr", events: 6 },
-          { month: "May", events: 2 },
-          { month: "Jun", events: 5 },
-        ]);
-
-        setRequirements([
-          { id: 1, title: "Volunteers Needed", category: "Manpower", priority: "High", status: "Open" },
-          { id: 2, title: "Technical Support", category: "Technical", priority: "Medium", status: "In Progress" },
-          { id: 3, title: "Sponsorship Required", category: "Finance", priority: "High", status: "Open" },
-          { id: 4, title: "Social Media Promotion", category: "Outreach", priority: "Medium", status: "In Progress" },
-        ]);
-
-        setUpcomingEvent({
-          id: 1,
-          name: "Annual Tech Symposium",
-          date: "May 25, 2024",
-          time: "2:00 PM - 6:00 PM",
-          venue: "Main Auditorium",
-        });
-
-        setEventVisibility({
-          visible: 18,
-          hidden: 6,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadDashboard();
   }, []);
+
+  const handleSync = async () => {
+    try {
+      setLoading(true);
+      await syncDashboard();
+      await loadDashboard();
+    } catch (err) {
+      console.error("Sync failed", err);
+    }
+  };
 
   /* ---------------- STYLES ---------------- */
   const styles = `
@@ -370,78 +339,58 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column - Multiple Panels */}
-          <div className="col-12 col-lg-4">
-            <div className="d-flex flex-column gap-4">
-              {/* Event Visibility Breakdown */}
-              <div className="animate-up" style={{ animationDelay: '550ms' }}>
-                <div className="glass-panel p-4">
+          {/* Right Column - Upcoming Event */}
+          <div className="col-12 col-lg-4 d-flex">
+            <div className="animate-up w-100" style={{ animationDelay: "600ms" }}>
+              {upcomingEvent && (
+                <div className="glass-panel p-4 h-100 d-flex flex-column">
                   <h5 className="fw-bold text-white mb-3">
-                    <i className="bi bi-eye-fill text-primary me-2"></i>
-                    Event Visibility
+                    <i className="bi bi-calendar-event text-primary me-2"></i>
+                    Next Upcoming Event
                   </h5>
-                  <div className="mb-3">
-                    <div className="d-flex justify-content-between mb-2">
-                      <span className="text-white">Visible Events</span>
-                      <span className="text-primary fw-bold">{eventVisibility.visible}</span>
-                    </div>
-                    <div className="progress-container">
-                      <div
-                        className="progress-gradient"
-                        style={{
-                          width: `${(eventVisibility.visible / (eventVisibility.visible + eventVisibility.hidden)) * 100}%`
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="d-flex justify-content-between mb-2">
-                      <span className="text-white">Hidden Events</span>
-                      <span className="text-secondary">{eventVisibility.hidden}</span>
-                    </div>
-                    <div className="progress-container">
-                      <div
-                        className="bg-secondary bg-opacity-25"
-                        style={{
-                          width: `${(eventVisibility.hidden / (eventVisibility.visible + eventVisibility.hidden)) * 100}%`,
-                          height: '8px',
-                          borderRadius: '10px'
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Upcoming Event Highlight */}
-              <div className="animate-up" style={{ animationDelay: '600ms' }}>
-                <div className="glass-panel p-4">
-                  <h5 className="fw-bold text-white mb-3">
-                    <i className="bi bi-star-fill text-warning me-2"></i>
-                    Featured Event
-                  </h5>
-                  {upcomingEvent && (
-                    <div className="border border-secondary border-opacity-25 rounded-3 p-3 hover-shadow">
-                      <h6 className="text-white mb-2">{upcomingEvent.name}</h6>
-                      <div className="d-flex align-items-center gap-2 mb-2">
-                        <i className="bi bi-calendar3 text-primary"></i>
-                        <small className="text-secondary">{upcomingEvent.date}</small>
-                      </div>
-                      <div className="d-flex align-items-center gap-2 mb-2">
-                        <i className="bi bi-clock text-primary"></i>
-                        <small className="text-secondary">{upcomingEvent.time}</small>
-                      </div>
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <i className="bi bi-geo-alt text-primary"></i>
-                        <small className="text-secondary">{upcomingEvent.venue}</small>
-                      </div>
-                      <button className="btn btn-outline-gradient btn-sm w-100 rounded-pill">
-                        View Event Details
-                      </button>
+                  <div className="border border-secondary border-opacity-25 rounded-3 p-3 flex-grow-1">
+                    <h6 className="text-white mb-2">{upcomingEvent.name}</h6>
+
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <i className="bi bi-calendar3 text-primary"></i>
+                      <small className="text-secondary">{upcomingEvent.date}</small>
                     </div>
-                  )}
+
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <i className="bi bi-clock text-primary"></i>
+                      <small className="text-secondary">{upcomingEvent.time}</small>
+                    </div>
+
+                    <div className="d-flex align-items-center gap-2">
+                      <i className="bi bi-geo-alt text-primary"></i>
+                      <small className="text-secondary">{upcomingEvent.venue}</small>
+                    </div>
+                    {/* Contact Persons */}
+                    {upcomingEvent.contactPersons && upcomingEvent.contactPersons.length > 0 && (
+                      <div className="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                        <h6 className="text-white mb-2">
+                          <i className="bi bi-telephone-fill text-primary me-2"></i>
+                          Contact Persons
+                        </h6>
+
+                        <div className="d-flex flex-column gap-2">
+                          {upcomingEvent.contactPersons.map((cp, idx) => (
+                            <div
+                              key={idx}
+                              className="d-flex justify-content-between align-items-center px-3 py-2 rounded-3"
+                              style={{ background: "rgba(255,255,255,0.05)" }}
+                            >
+                              <span className="text-white fw-semibold">{cp.name}</span>
+                              <span className="text-primary small">{cp.phone}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -455,45 +404,39 @@ const Dashboard: React.FC = () => {
                   <i className="bi bi-list-task text-primary me-2"></i>
                   Ongoing Requirements
                 </h5>
-                <button className="btn btn-sm btn-link text-decoration-none text-secondary">
+                <button
+                  className="btn btn-sm btn-link text-decoration-none text-secondary"
+                  onClick={() => navigate("/admin/recruitments")}
+                >
                   Manage All <i className="bi bi-arrow-right ms-1"></i>
                 </button>
               </div>
 
               <div className="row g-3">
-                {requirements.map((req) => (
-                  <div key={req.id} className="col-12 col-md-6">
-                    <div className="border border-secondary border-opacity-25 rounded-3 p-3 hover-shadow h-100">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h6 className="text-white m-0">{req.title}</h6>
-                        <span className={`badge rounded-pill px-3 py-1 ${req.priority === 'High' ? 'badge-high' :
-                            req.priority === 'Medium' ? 'badge-medium' : 'badge-low'
-                          }`}>
-                          {req.priority}
+                {ongoingRecruitments.length === 0 ? (
+                  <p className="text-secondary text-center">No open recruitments</p>
+                ) : (
+                  ongoingRecruitments.map((rec) => (
+                    <div key={rec._id} className="col-12 col-md-6">
+                      <div className="border border-secondary border-opacity-25 rounded-3 p-3 h-100">
+                        <h6 className="text-white mb-1">{rec.title}</h6>
+
+                        <span className="badge bg-primary text-white mb-2">
+                          {rec.role}
                         </span>
-                      </div>
-                      <div className="d-flex align-items-center gap-2 mb-3">
-                        <span className="badge badge-category rounded-pill px-3 py-1">
-                          {req.category}
-                        </span>
-                        <span className={`badge rounded-pill px-3 py-1 ${req.status === 'Open' ? 'bg-primary bg-opacity-25 text-primary' : 'bg-info bg-opacity-25 text-info'
-                          }`}>
-                          {req.status}
-                        </span>
-                      </div>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="d-flex gap-2">
-                          <i className="bi bi-chat-dots text-secondary"></i>
-                          <i className="bi bi-person-plus text-secondary"></i>
-                          <i className="bi bi-flag text-secondary"></i>
+
+                        <div className="text-secondary small">
+                          Opened on{" "}
+                          {new Date(rec.createdAt).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
                         </div>
-                        <button className="btn btn-outline-gradient btn-sm rounded-pill px-3">
-                          Manage
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -506,32 +449,33 @@ const Dashboard: React.FC = () => {
                   <i className="bi bi-clock-history text-warning me-2"></i>
                   Recent Activity
                 </h5>
-                <button className="btn btn-sm btn-link text-decoration-none text-secondary">View All</button>
               </div>
-
               <ul className="list-unstyled m-0 d-flex flex-column gap-3">
-                {recentMembers.map((m, i) => (
-                  <li
-                    key={i}
-                    className="list-item-hover d-flex align-items-center p-2 rounded-3"
-                  >
-                    <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center me-3 border border-secondary border-opacity-25" style={{ width: 40, height: 40 }}>
-                      <span className="fw-bold text-white">{m.name.charAt(0)}</span>
+                {recentActivity.slice(0, 3).map((a, i) => (
+                  <li key={i} className="list-item-hover p-2 rounded-3">
+                    <h6 className="text-white m-0">{a.title}</h6>
+                    <span className="text-secondary small">{a.subtitle}</span>
+                    <div className="text-secondary small">
+                      {new Date(a.time).toLocaleString()}
                     </div>
-                    <div className="flex-grow-1">
-                      <h6 className="text-white m-0 mb-1" style={{ fontSize: '0.95rem' }}>{m.name}</h6>
-                      <span className="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25" style={{ fontSize: '0.7rem' }}>
-                        {m.role}
-                      </span>
-                    </div>
-                    <small className="text-secondary" style={{ fontSize: '0.8rem' }}>{m.joinedAt}</small>
                   </li>
                 ))}
               </ul>
-
               <div className="mt-4 pt-3 border-top border-white border-opacity-10 text-center">
-                <button className="btn btn-outline-light btn-sm w-100 rounded-pill">
-                  Sync Data <i className="bi bi-arrow-repeat ms-1"></i>
+                <button
+                  className="btn btn-outline-light btn-sm w-100 rounded-pill"
+                  onClick={handleSync}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      Syncing... <i className="bi bi-arrow-repeat ms-1"></i>
+                    </>
+                  ) : (
+                    <>
+                      Sync Data <i className="bi bi-arrow-repeat ms-1"></i>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

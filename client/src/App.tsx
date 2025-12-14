@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AdminLogin from "./pages/Admin/adminLogin";
 import Dashboard from "./pages/Admin/Dashboard";
 import Members from "./pages/Admin/Members";
 import EventManager from "./pages/Admin/EventManager"
 import Recruitments from "./pages/Admin/Recruitments";
+import AdminSettings from "./pages/Admin/Adminsettings";
+import AdminLogin from "./pages/Admin/adminLogin";
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
         <Route path="/admin/members" element={<Members />} />
         <Route path="/admin/eventmanager" element={<EventManager />} />
         <Route path="/admin/recruitments" element={<Recruitments />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
       </Routes>
     </BrowserRouter>
   );

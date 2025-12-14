@@ -16,6 +16,9 @@ export interface EventDocument extends Document {
   whatsappGroupLink?: string | null;
   isClosed: boolean;
   display: boolean;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const ContactPersonSchema = new Schema<ContactPerson>(
