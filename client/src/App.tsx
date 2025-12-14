@@ -3,6 +3,7 @@ import AdminLogin from "./pages/Admin/adminLogin";
 import Dashboard from "./pages/Admin/Dashboard";
 import Members from "./pages/Admin/Members";
 import EventManager from "./pages/Admin/EventManager"
+import Recruitments from "./pages/Admin/Recruitments";
 
 const App = () => {
   return (
@@ -12,6 +13,7 @@ const App = () => {
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/members" element={<Members />} />
         <Route path="/admin/eventmanager" element={<EventManager />} />
+        <Route path="/admin/recruitments" element={<Recruitments />} />
       </Routes>
     </BrowserRouter>
   );

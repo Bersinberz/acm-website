@@ -1,12 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import Sidebar from "../../components/Sidebar";
+import AdminLayout from "../../components/AdminLayout";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useNavigate } from "react-router-dom";
 import Cropper from "react-easy-crop";
 import type { Area, Point } from "react-easy-crop";
-import Loader from "../../components/Loader";
-import Message from "../../components/Message";
 import { createMember, getMembers, deleteMember, updateMember } from "../../services/admin/membersService";
 
 // --- INTERFACES ---
@@ -73,9 +70,6 @@ const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<string>
 
 // --- COMPONENT ---
 const Members = () => {
-    const [activePage, setActivePage] = useState("Members");
-    const [expandedRow, setExpandedRow] = useState<number | null>(null);
-
     // Data States
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(false);
@@ -110,7 +104,7 @@ const Members = () => {
 
     // UI States
     const [toast, setToast] = useState<ToastState>({ show: false, text: "", variant: "info" });
-    const navigate = useNavigate();
+    const [expandedRow, setExpandedRow] = useState<number | null>(null);
 
     // --- DERIVED STATE ---
     const uniqueDesignations = useMemo(() => Array.from(new Set(members.map(m => m.designation))).sort(), [members]);
@@ -130,23 +124,45 @@ const Members = () => {
         const loadMembers = async () => {
             try {
                 setLoading(true);
+
+                const start = Date.now();
+
                 const data = await getMembers();
-                setMembers(data.map((m: any) => ({
-                    name: m.name,
-                    designation: m.designation,
-                    batch: m.batch,
-                    profilePic: m.imageUrl,
-                    social: { linkedin: m.linkedin, instagram: m.instagram, facebook: m.facebook },
-                    _id: m._id
-                })));
+
+                // Minimum loader time (ms)
+                const MIN_LOADING_TIME = 400;
+                const elapsed = Date.now() - start;
+
+                if (elapsed < MIN_LOADING_TIME) {
+                    await new Promise(resolve =>
+                        setTimeout(resolve, MIN_LOADING_TIME - elapsed)
+                    );
+                }
+
+                setMembers(
+                    data.map((m: any) => ({
+                        name: m.name,
+                        designation: m.designation,
+                        batch: m.batch,
+                        profilePic: m.imageUrl,
+                        social: {
+                            linkedin: m.linkedin,
+                            instagram: m.instagram,
+                            facebook: m.facebook,
+                        },
+                        _id: m._id,
+                    }))
+                );
             } catch (error) {
                 showToast("Failed to load members", "error");
             } finally {
                 setLoading(false);
             }
         };
+
         loadMembers();
     }, []);
+
 
     // --- HANDLERS ---
     const showToast = (text: string, variant: ToastVariant = "info") => {
@@ -210,7 +226,7 @@ const Members = () => {
             setShowModal(false);
             setNewMember({ name: "", designation: "", batch: "", profilePic: "", social: { linkedin: "", instagram: "", facebook: "" } });
             setImagePreview("");
-            showToast("Member added successfully!", "success");
+            showToast("Member added!", "success");
         } catch (error) {
             showToast("Failed to add member", "error");
         } finally {
@@ -238,7 +254,7 @@ const Members = () => {
 
             setMembers(prev => prev.map(m => m._id === updated._id ? { ...m, ...updated, profilePic: updated.imageUrl || m.profilePic } : m));
             setShowEditModal(false);
-            showToast("Member updated successfully!", "success");
+            showToast("Member updated!", "success");
         } catch (err) {
             showToast("Failed to update member", "error");
         } finally {
@@ -253,7 +269,7 @@ const Members = () => {
             await deleteMember(memberToDelete._id);
             setMembers(prev => prev.filter(m => m._id !== memberToDelete._id));
             setShowDeleteModal(false);
-            showToast("Member deleted successfully!", "success");
+            showToast("Member deleted!", "success");
         } catch (err) {
             showToast("Failed to delete member", "error");
         } finally {
@@ -421,183 +437,187 @@ const Members = () => {
   `;
 
     return (
-        <div className="d-flex vh-100" style={{ background: "#111827", color: "#e5e7eb", overflowY: "auto" }}>
+        <AdminLayout
+            active="Members"
+            loading={loading}
+            toast={{
+                show: toast.show,
+                variant: toast.variant,
+                message: toast.text,
+            }}
+            onCloseToast={() => setToast(prev => ({ ...prev, show: false }))}
+        >
             <style>{styles}</style>
 
-            <Sidebar active={activePage} onSelect={setActivePage} onLogout={() => navigate("/admin/login")} />
+            {/* --- HEADER --- */}
+            <div className="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h1 className="fw-bold text-white mb-2" style={{ letterSpacing: '-1px' }}>Team Directory</h1>
+                    <p className="text-secondary mb-0">Manage your organization's hierarchy and members.</p>
+                </div>
+                <button
+                    className="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow-lg d-flex align-items-center gap-2"
+                    onClick={() => setShowModal(true)}
+                    style={{ transition: 'transform 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    <i className="bi bi-plus-lg"></i>
+                    <span>Add Member</span>
+                </button>
+            </div>
 
-            <div className="flex-grow-1 p-4 p-md-5">
-
-                {/* --- HEADER --- */}
-                <div className="d-flex justify-content-between align-items-end mb-5">
-                    <div>
-                        <h1 className="fw-bold text-white mb-2" style={{ letterSpacing: '-1px' }}>Team Directory</h1>
-                        <p className="text-secondary mb-0">Manage your organization's hierarchy and members.</p>
-                    </div>
-                    <button
-                        className="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow-lg d-flex align-items-center gap-2"
-                        onClick={() => setShowModal(true)}
-                        style={{ transition: 'transform 0.2s' }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            {/* --- FILTER TOOLBAR --- */}
+            <div className="glass-panel p-3 rounded-4 mb-4 d-flex flex-column flex-md-row gap-3 align-items-center">
+                <div className="input-group search-pill" style={{ maxWidth: '400px' }}>
+                    <span
+                        className="input-group-text bg-transparent border-0 text-white ps-3 position-absolute search-icon"
                     >
-                        <i className="bi bi-plus-lg"></i>
-                        <span>Add Member</span>
+                        <i className="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="text"
+                        className="form-control form-control-glass ps-5"
+                        placeholder="Search members..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="d-flex gap-3 flex-grow-1 w-100">
+                    <select
+                        className="form-select form-select-glass"
+                        value={filterDesignation}
+                        onChange={(e) => setFilterDesignation(e.target.value)}
+                    >
+                        <option value="">All Designations</option>
+                        {uniqueDesignations.map((d, i) => <option key={i} value={d}>{d}</option>)}
+                    </select>
+
+                    <select
+                        className="form-select form-select-glass"
+                        value={filterBatch}
+                        onChange={(e) => setFilterBatch(e.target.value)}
+                    >
+                        <option value="">All Batches</option>
+                        {uniqueBatches.map((b, i) => <option key={i} value={b}>{b}</option>)}
+                    </select>
+                </div>
+
+                {(searchTerm || filterDesignation || filterBatch) && (
+                    <button
+                        className="btn btn-outline-secondary rounded-pill px-3 text-white border-white"
+                        onClick={() => { setSearchTerm(""); setFilterDesignation(""); setFilterBatch(""); }}
+                    >
+                        <i className="bi bi-x-lg me-1"></i> Clear
                     </button>
-                </div>
+                )}
+            </div>
 
-                {/* --- FILTER TOOLBAR --- */}
-                <div className="glass-panel p-3 rounded-4 mb-4 d-flex flex-column flex-md-row gap-3 align-items-center">
-                    <div className="input-group search-pill" style={{ maxWidth: '400px' }}>
-                        <span
-                            className="input-group-text bg-transparent border-0 text-white ps-3 position-absolute search-icon"
-                        >
-                            <i className="bi bi-search"></i>
-                        </span>
-                        <input
-                            type="text"
-                            className="form-control form-control-glass ps-5"
-                            placeholder="Search members..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+            {/* --- MEMBERS LIST --- */}
+            <div className="d-flex flex-column gap-3">
+                {filteredMembers.length === 0 ? (
+                    <div className="text-center py-5 glass-panel rounded-4">
+                        <i className="bi bi-people display-4 text-secondary opacity-50 mb-3 d-block"></i>
+                        <h5 className="text-white">No members found</h5>
+                        <p className="text-secondary">Try adjusting your filters or search terms.</p>
                     </div>
-                    <div className="d-flex gap-3 flex-grow-1 w-100">
-                        <select
-                            className="form-select form-select-glass"
-                            value={filterDesignation}
-                            onChange={(e) => setFilterDesignation(e.target.value)}
-                        >
-                            <option value="">All Designations</option>
-                            {uniqueDesignations.map((d, i) => <option key={i} value={d}>{d}</option>)}
-                        </select>
-
-                        <select
-                            className="form-select form-select-glass"
-                            value={filterBatch}
-                            onChange={(e) => setFilterBatch(e.target.value)}
-                        >
-                            <option value="">All Batches</option>
-                            {uniqueBatches.map((b, i) => <option key={i} value={b}>{b}</option>)}
-                        </select>
-                    </div>
-
-                    {(searchTerm || filterDesignation || filterBatch) && (
-                        <button
-                            className="btn btn-outline-secondary rounded-pill px-3 text-white border-white"
-                            onClick={() => { setSearchTerm(""); setFilterDesignation(""); setFilterBatch(""); }}
-                        >
-                            <i className="bi bi-x-lg me-1"></i> Clear
-                        </button>
-                    )}
-                </div>
-
-                {/* --- MEMBERS LIST --- */}
-                <div className="d-flex flex-column gap-3">
-                    {filteredMembers.length === 0 ? (
-                        <div className="text-center py-5 glass-panel rounded-4">
-                            <i className="bi bi-people display-4 text-secondary opacity-50 mb-3 d-block"></i>
-                            <h5 className="text-white">No members found</h5>
-                            <p className="text-secondary">Try adjusting your filters or search terms.</p>
-                        </div>
-                    ) : (
-                        filteredMembers.map((member, index) => {
-                            const isOpen = expandedRow === index;
-                            return (
+                ) : (
+                    filteredMembers.map((member, index) => {
+                        const isOpen = expandedRow === index;
+                        return (
+                            <div
+                                key={member._id || index}
+                                className={`member-card rounded-4 ${isOpen ? 'border-primary border-opacity-50' : ''}`}
+                                style={{ animationDelay: `${index * 0.05}s` }}
+                            >
+                                {/* Card Header */}
                                 <div
-                                    key={member._id || index}
-                                    className={`member-card rounded-4 ${isOpen ? 'border-primary border-opacity-50' : ''}`}
-                                    style={{ animationDelay: `${index * 0.05}s` }}
+                                    className="p-3 p-md-4 d-flex justify-content-between align-items-center cursor-pointer"
+                                    onClick={() => setExpandedRow(isOpen ? null : index)}
+                                    style={{ cursor: 'pointer' }}
                                 >
-                                    {/* Card Header */}
-                                    <div
-                                        className="p-3 p-md-4 d-flex justify-content-between align-items-center cursor-pointer"
-                                        onClick={() => setExpandedRow(isOpen ? null : index)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
-                                        <div className="d-flex align-items-center gap-4">
-                                            {/* Avatar */}
-                                            <div className="position-relative">
-                                                <img
-                                                    src={member.profilePic || "https://via.placeholder.com/60"}
-                                                    alt={member.name}
-                                                    className="rounded-circle shadow-sm object-fit-cover"
-                                                    style={{ width: '60px', height: '60px', border: '2px solid rgba(255,255,255,0.2)' }}
-                                                />
-                                                <div className="position-absolute bottom-0 end-0 bg-success border border-dark rounded-circle" style={{ width: 12, height: 12 }}></div>
-                                            </div>
-
-                                            {/* Info */}
-                                            <div>
-                                                <h5 className="fw-bold text-white mb-1">{member.name}</h5>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <span className="badge bg-primary bg-opacity-20 text-primary-subtle fw-medium px-2 py-1 rounded-2">
-                                                        {member.designation}
-                                                    </span>
-                                                    <span className="text-secondary small border-start border-secondary ps-2">
-                                                        {member.batch}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                    <div className="d-flex align-items-center gap-4">
+                                        {/* Avatar */}
+                                        <div className="position-relative">
+                                            <img
+                                                src={member.profilePic || "https://via.placeholder.com/60"}
+                                                alt={member.name}
+                                                className="rounded-circle shadow-sm object-fit-cover"
+                                                style={{ width: '60px', height: '60px', border: '2px solid rgba(255,255,255,0.2)' }}
+                                            />
+                                            <div className="position-absolute bottom-0 end-0 bg-success border border-dark rounded-circle" style={{ width: 12, height: 12 }}></div>
                                         </div>
 
-                                        <div className={`text-secondary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                                            <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'} fs-5`}></i>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Content */}
-                                    <div className={`expandable-wrapper ${isOpen ? "open" : ""}`}>
-                                        <div className="expandable-inner px-4 pb-4">
-                                            <hr className="border-secondary opacity-25 my-0 mb-4" />
-
-                                            <div className="d-flex justify-content-between align-items-center flex-wrap gap-4">
-                                                {/* Social Links */}
-                                                <div className="d-flex gap-3">
-                                                    {member.social.linkedin && (
-                                                        <a href={member.social.linkedin} target="_blank" rel="noreferrer" className="social-btn linkedin" title="LinkedIn">
-                                                            <i className="bi bi-linkedin"></i>
-                                                        </a>
-                                                    )}
-                                                    {member.social.instagram && (
-                                                        <a href={member.social.instagram} target="_blank" rel="noreferrer" className="social-btn instagram" title="Instagram">
-                                                            <i className="bi bi-instagram"></i>
-                                                        </a>
-                                                    )}
-                                                    {member.social.facebook && (
-                                                        <a href={member.social.facebook} target="_blank" rel="noreferrer" className="social-btn facebook" title="Facebook">
-                                                            <i className="bi bi-facebook"></i>
-                                                        </a>
-                                                    )}
-                                                    {!member.social.linkedin && !member.social.instagram && !member.social.facebook && (
-                                                        <span className="text-secondary small fst-italic mt-2">No social links linked.</span>
-                                                    )}
-                                                </div>
-
-                                                {/* Actions */}
-                                                <div className="d-flex gap-2">
-                                                    <button
-                                                        className="btn btn-outline-info rounded-pill px-4 btn-sm fw-medium hover-lift"
-                                                        onClick={(e) => { e.stopPropagation(); setEditMember(member); setEditImagePreview(member.profilePic); setShowEditModal(true); }}
-                                                    >
-                                                        <i className="bi bi-pencil-square me-2"></i> Edit
-                                                    </button>
-                                                    <button
-                                                        className="btn btn-outline-danger rounded-pill px-4 btn-sm fw-medium hover-lift"
-                                                        onClick={(e) => { e.stopPropagation(); setMemberToDelete(member); setShowDeleteModal(true); }}
-                                                    >
-                                                        <i className="bi bi-trash me-2"></i> Delete
-                                                    </button>
-                                                </div>
+                                        {/* Info */}
+                                        <div>
+                                            <h5 className="fw-bold text-white mb-1">{member.name}</h5>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <span className="badge bg-primary bg-opacity-20 text-primary-subtle fw-medium px-2 py-1 rounded-2">
+                                                    {member.designation}
+                                                </span>
+                                                <span className="text-secondary small border-start border-secondary ps-2">
+                                                    {member.batch}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
 
+                                    <div className={`text-secondary transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                                        <i className={`bi bi-chevron-${isOpen ? 'up' : 'down'} fs-5`}></i>
+                                    </div>
                                 </div>
-                            );
-                        })
-                    )}
-                </div>
+
+                                {/* Expanded Content */}
+                                <div className={`expandable-wrapper ${isOpen ? "open" : ""}`}>
+                                    <div className="expandable-inner px-4 pb-4">
+                                        <hr className="border-secondary opacity-25 my-0 mb-4" />
+
+                                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-4">
+                                            {/* Social Links */}
+                                            <div className="d-flex gap-3">
+                                                {member.social.linkedin && (
+                                                    <a href={member.social.linkedin} target="_blank" rel="noreferrer" className="social-btn linkedin" title="LinkedIn">
+                                                        <i className="bi bi-linkedin"></i>
+                                                    </a>
+                                                )}
+                                                {member.social.instagram && (
+                                                    <a href={member.social.instagram} target="_blank" rel="noreferrer" className="social-btn instagram" title="Instagram">
+                                                        <i className="bi bi-instagram"></i>
+                                                    </a>
+                                                )}
+                                                {member.social.facebook && (
+                                                    <a href={member.social.facebook} target="_blank" rel="noreferrer" className="social-btn facebook" title="Facebook">
+                                                        <i className="bi bi-facebook"></i>
+                                                    </a>
+                                                )}
+                                                {!member.social.linkedin && !member.social.instagram && !member.social.facebook && (
+                                                    <span className="text-secondary small fst-italic mt-2">No social links linked.</span>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="d-flex gap-2">
+                                                <button
+                                                    className="btn btn-outline-info rounded-pill px-4 btn-sm fw-medium hover-lift"
+                                                    onClick={(e) => { e.stopPropagation(); setEditMember(member); setEditImagePreview(member.profilePic); setShowEditModal(true); }}
+                                                >
+                                                    <i className="bi bi-pencil-square me-2"></i> Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-outline-danger rounded-pill px-4 btn-sm fw-medium hover-lift"
+                                                    onClick={(e) => { e.stopPropagation(); setMemberToDelete(member); setShowDeleteModal(true); }}
+                                                >
+                                                    <i className="bi bi-trash me-2"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        );
+                    })
+                )}
             </div>
 
             {/* --- ADD / EDIT MODAL (Reusable Layout) --- */}
@@ -772,12 +792,7 @@ const Members = () => {
                     </div>
                 </div>
             )}
-
-            <Loader loading={loading} variant="orbit" />
-            <Message show={toast.show} variant={toast.variant} onClose={() => setToast(prev => ({ ...prev, show: false }))}>
-                {toast.text}
-            </Message>
-        </div>
+        </AdminLayout>
     );
 };
 

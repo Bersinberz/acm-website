@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
-import Sidebar from "../../components/Sidebar";
-import { useNavigate } from "react-router-dom";
+import AdminLayout from "../../components/AdminLayout";
 import { createEvent, deleteEvent, getAllEvents, toggleEventDisplay, updateEvent } from "../../services/admin/eventService";
-import Loader from "../../components/Loader";
-import Message from "../../components/Message";
 
 // --- CSS Styles for Animation & Design ---
 const styles = `
@@ -194,7 +191,6 @@ const styles = `
 .modal-content-glass p {
   color: #9ca3af;
 }
-
 `;
 
 /* Types */
@@ -217,9 +213,6 @@ interface Event {
 }
 
 const EventManager: React.FC = () => {
-  const [activePage, setActivePage] = useState("Events");
-  const navigate = useNavigate();
-
   /* Events list */
   const [events, setEvents] = useState<Event[]>([]);
 
@@ -253,7 +246,6 @@ const EventManager: React.FC = () => {
   const parseTime = (time?: string) => {
     if (!time) return { hour: "", minute: "", meridian: "" };
 
-    // Handle ISO string or HH:MM:SS
     if (time.includes("T")) {
       const date = new Date(time);
       let h = date.getHours();
@@ -270,7 +262,6 @@ const EventManager: React.FC = () => {
       };
     }
 
-    // Handle "HH:MM:SS"
     if (time.split(":").length === 3) {
       let [hour, minute] = time.split(":");
       let h = parseInt(hour, 10);
@@ -286,14 +277,12 @@ const EventManager: React.FC = () => {
       };
     }
 
-    // Handle "HH:MM AM"
     if (time.includes(" ")) {
       const [hm, meridian] = time.split(" ");
       const [hour, minute] = hm.split(":");
       return { hour, minute, meridian };
     }
 
-    // Handle "HH:MM"
     if (time.includes(":")) {
       let [hour, minute] = time.split(":");
       let h = parseInt(hour, 10);
@@ -312,9 +301,6 @@ const EventManager: React.FC = () => {
     return { hour: "", minute: "", meridian: "" };
   };
 
-
-
-  /* Form state */
   const [form, setForm] = useState<Event>({
     _id: "",
     name: "",
@@ -328,23 +314,36 @@ const EventManager: React.FC = () => {
     display: true,
   });
 
-  const fetchAllEvents = async () => {
-    try {
-      setLoading(true);
-      const response = await getAllEvents();
-      setEvents(response.events || []);
-    } catch (error) {
-      showToast("error", "Failed to fetch events");
-    } finally {
-      setLoading(false);
+const fetchAllEvents = async () => {
+  try {
+    setLoading(true);
+
+    const start = Date.now();
+
+    const response = await getAllEvents();
+
+    const MIN_LOADING_TIME = 400;
+    const elapsed = Date.now() - start;
+
+    if (elapsed < MIN_LOADING_TIME) {
+      await new Promise(resolve =>
+        setTimeout(resolve, MIN_LOADING_TIME - elapsed)
+      );
     }
-  };
+
+    setEvents(response.events || []);
+  } catch (error) {
+    showToast("error", "Failed to fetch events");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchAllEvents();
   }, []);
 
-  const handleLogout = () => navigate("/admin/login");
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape" && showModal) {
@@ -356,7 +355,6 @@ const EventManager: React.FC = () => {
     return () => window.removeEventListener("keydown", handleEsc);
   }, [showModal]);
 
-  // --- Helper: Reset Form ---
   const resetForm = () => {
     setForm({
       _id: "",
@@ -390,13 +388,11 @@ const EventManager: React.FC = () => {
     }, 300);
   };
 
-  // 1. Edit
   const handleEditEvent = (event: Event) => {
     const formattedDate = event.date
       ? new Date(event.date).toISOString().split("T")[0]
       : "";
 
-    // ---- FIX TIME ----
     const formattedTime = event.time || "";
 
     setForm({
@@ -410,7 +406,6 @@ const EventManager: React.FC = () => {
     setShowModal(true);
   };
 
-
   const handleDeleteEvent = async () => {
     if (!eventToDelete?._id) return;
 
@@ -418,7 +413,7 @@ const EventManager: React.FC = () => {
       setLoading(true);
       await deleteEvent(eventToDelete._id);
       setEvents(prev => prev.filter(e => e._id !== eventToDelete._id));
-      showToast("success", "Event deleted successfully");
+      showToast("success", "Event deleted");
       setShowDeleteModal(false);
     } catch {
       showToast("error", "Failed to delete event");
@@ -427,18 +422,10 @@ const EventManager: React.FC = () => {
     }
   };
 
-
-
-  // 3. Toggle Status (Mock Implementation + State Update)
   const handleToggleDisplay = async (id: string, currentDisplay: boolean) => {
     try {
-
       const newDisplay = !currentDisplay;
-
-      // 🔥 Persist to DB
       await toggleEventDisplay(id, newDisplay);
-
-      // ✅ Update UI after success
       setEvents(prev =>
         prev.map(e =>
           e._id === id ? { ...e, display: newDisplay } : e
@@ -449,8 +436,6 @@ const EventManager: React.FC = () => {
     }
   };
 
-
-  // 4. Save (Create or Update)
   const handleSaveEvent = async () => {
     if (!form.name) {
       showToast("warning", "Event name is required");
@@ -462,10 +447,10 @@ const EventManager: React.FC = () => {
 
       if (editingId) {
         await updateEvent(editingId, form);
-        showToast("success", "Event updated successfully");
+        showToast("success", "Event updated");
       } else {
         await createEvent(form);
-        showToast("success", "Event created successfully");
+        showToast("success", "Event created");
       }
 
       await fetchAllEvents();
@@ -479,443 +464,430 @@ const EventManager: React.FC = () => {
 
   const { hour, minute, meridian } = parseTime(form.time);
 
-
   return (
-    <div className="d-flex vh-100" style={{ background: "#111827", color: "white" }}>
+    <AdminLayout
+      active="Events"
+      loading={loading}
+      toast={{
+        show: toast.show,
+        variant: toast.variant,
+        message: toast.message,
+        title: toast.title,
+      }}
+      onCloseToast={() => setToast(prev => ({ ...prev, show: false }))}
+    >
       {/* Inject Styles */}
       <style>{styles}</style>
+      
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-5">
+        <div>
+          <h2 className="fw-bold text-white mb-1">Events Dashboard</h2>
+          <p className="text-secondary m-0">Manage your schedule and registrations</p>
+        </div>
+        <button
+          className="btn btn-primary px-4 py-2 fw-semibold shadow-lg d-flex align-items-center gap-2"
+          onClick={handleCreateEvent}
+          style={{ borderRadius: '12px' }}
+        >
+          <i className="bi bi-plus-lg"></i>
+          <span>Create Event</span>
+        </button>
+      </div>
 
-      <Loader
-        loading={loading}
-        variant="orbit"
-        fullscreen
-        theme="dark"
-      />
-      <Message
-        show={toast.show}
-        variant={toast.variant}
-        title={toast.title}
-        onClose={() => setToast(prev => ({ ...prev, show: false }))}
-      >
-        {toast.message}
-      </Message>
-
-      <Sidebar
-        active={activePage}
-        onSelect={(page) => setActivePage(page)}
-        onLogout={handleLogout}
-      />
-
-      <div className="flex-grow-1 p-4" style={{ overflowY: "auto" }}>
-        {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-5">
-          <div>
-            <h2 className="fw-bold text-white mb-1">Events Dashboard</h2>
-            <p className="text-secondary m-0">Manage your schedule and registrations</p>
+      {/* Events Grid */}
+      <div className="row g-4">
+        {events.length === 0 && (
+          <div className="col-12 text-center py-5">
+            <i className="bi bi-calendar-x display-1 text-white opacity-50 mb-3 d-block"></i>
+            <h4 className="text-white fw-semibold">No events found</h4>
+            <p className="text-white-50">Create a new event to get started!</p>
           </div>
-          <button
-            className="btn btn-primary px-4 py-2 fw-semibold shadow-lg d-flex align-items-center gap-2"
-            onClick={handleCreateEvent}
-            style={{ borderRadius: '12px' }}
+        )}
+
+        {events.map((event, index) => (
+          <div
+            key={event._id}
+            className="col-12 col-md-6 col-xl-4"
+            style={{ animation: `slideInUp 0.5s ease-out forwards ${index * 0.1}s`, opacity: 0 }}
           >
-            <i className="bi bi-plus-lg"></i>
-            <span>Create Event</span>
-          </button>
-        </div>
+            <div className="event-card h-100 d-flex flex-column p-4">
 
-        {/* Events Grid */}
-        <div className="row g-4">
-          {events.length === 0 && (
-            <div className="col-12 text-center py-5">
-              <i className="bi bi-calendar-x display-1 text-white opacity-50 mb-3 d-block"></i>
-              <h4 className="text-white fw-semibold">No events found</h4>
-              <p className="text-white-50">Create a new event to get started!</p>
-            </div>
-          )}
-
-          {events.map((event, index) => (
-            <div
-              key={event._id}
-              className="col-12 col-md-6 col-xl-4"
-              style={{ animation: `slideInUp 0.5s ease-out forwards ${index * 0.1}s`, opacity: 0 }}
-            >
-              <div className="event-card h-100 d-flex flex-column p-4">
-
-                {/* Card Top: Status & Toggle */}
-                <div className="d-flex justify-content-between align-items-start mb-4">
-                  <div
-                    className={`badge rounded-pill px-3 py-2 ${event.display
-                        ? "bg-success bg-opacity-10 text-success"
-                        : "bg-secondary bg-opacity-25 text-secondary"
-                      }`}
-                  >
-                    <i
-                      className={`bi ${event.display
-                          ? "bi-eye-fill"
-                          : "bi-eye-slash-fill"
-                        } me-2`}
-                    ></i>
-                    {event.display ? "Visible" : "Hidden"}
-                  </div>
-
-
-                  <label className="toggle-switch" title="Toggle Active Status">
-                    <input
-                      type="checkbox"
-                      checked={event.display !== false}
-                      onChange={() => handleToggleDisplay(event._id, event.display !== false)}
-                    />
-                    <span className="slider"></span>
-                  </label>
-                </div>
-
-                {/* Card Body: Info */}
-                <div className="mb-4 flex-grow-1">
-                  <h4 className="fw-bold text-white mb-3 text-truncate" title={event.name}>
-                    {event.name}
-                  </h4>
-
-                  <div className="d-flex flex-column gap-2 text-secondary">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center border border-secondary border-opacity-25" style={{ width: 32, height: 32 }}>
-                        <i className="bi bi-calendar-event text-info"></i>
-                      </div>
-                      <span className="small">{event.date}</span>
-                    </div>
-
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center border border-secondary border-opacity-25" style={{ width: 32, height: 32 }}>
-                        <i className="bi bi-clock text-warning"></i>
-                      </div>
-                      <span className="small">{event.time}</span>
-                    </div>
-
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center border border-secondary border-opacity-25" style={{ width: 32, height: 32 }}>
-                        <i className="bi bi-geo-alt text-danger"></i>
-                      </div>
-                      <span className="small text-truncate">{event.venue}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Footer: Actions */}
-                <div className="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
-                  <div className="small text-muted d-flex align-items-center gap-1">
-                    <i className="bi bi-people"></i>
-                    {event.contactPersons?.length || 0} Contacts
-                  </div>
-
-                  <div className="d-flex gap-2">
-                    <button
-                      className="card-action-btn btn-edit text-light"
-                      onClick={() => handleEditEvent(event)}
-                      title="Edit Event"
-                    >
-                      <i className="bi bi-pencil-fill small"></i>
-                    </button>
-
-                    <button
-                      className="card-action-btn btn-delete text-light"
-                      onClick={() => {
-                        setEventToDelete(event);
-                        setShowDeleteModal(true);
-                      }}
-                      title="Delete Event"
-                    >
-                      <i className="bi bi-trash-fill small"></i>
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* --- Unified Modal (Create & Edit) --- */}
-        {showModal && (
-          <div className={`custom-modal-overlay ${isClosing ? 'closing' : ''}`}>
-            <div className="custom-modal-content p-4 m-3">
-
-              {/* Modal Header */}
-              <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3">
-                <h4 className="m-0 fw-bold text-white">
-                  {editingId ? "Edit Event" : "Create New Event"}
-                </h4>
-                <button
-                  onClick={closeModal}
-                  className="btn btn-link text-secondary text-decoration-none fs-4 p-0"
-                  style={{ lineHeight: 1 }}
+              {/* Card Top: Status & Toggle */}
+              <div className="d-flex justify-content-between align-items-start mb-4">
+                <div
+                  className={`badge rounded-pill px-3 py-2 ${event.display
+                    ? "bg-success bg-opacity-10 text-success"
+                    : "bg-secondary bg-opacity-25 text-secondary"
+                    }`}
                 >
-                  <i className="bi bi-x-lg"></i>
-                </button>
+                  <i
+                    className={`bi ${event.display
+                      ? "bi-eye-fill"
+                      : "bi-eye-slash-fill"
+                      } me-2`}
+                  ></i>
+                  {event.display ? "Visible" : "Hidden"}
+                </div>
+
+                <label className="toggle-switch" title="Toggle Active Status">
+                  <input
+                    type="checkbox"
+                    checked={event.display !== false}
+                    onChange={() => handleToggleDisplay(event._id, event.display !== false)}
+                  />
+                  <span className="slider"></span>
+                </label>
               </div>
 
-              {/* Modal Body */}
-              <div className="modal-body-custom">
+              {/* Card Body: Info */}
+              <div className="mb-4 flex-grow-1">
+                <h4 className="fw-bold text-white mb-3 text-truncate" title={event.name}>
+                  {event.name}
+                </h4>
 
-                {/* Event Name */}
-                <div className="mb-4">
-                  <label className="form-label text-secondary small fw-bold">Event Name</label>
-                  <input
-                    className="form-control form-control-dark mb-3 p-3"
-                    placeholder="Enter event name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
+                <div className="d-flex flex-column gap-2 text-secondary">
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center border border-secondary border-opacity-25" style={{ width: 32, height: 32 }}>
+                      <i className="bi bi-calendar-event text-info"></i>
+                    </div>
+                    <span className="small">{event.date}</span>
+                  </div>
 
-                  {/* Date & Time */}
-                  <div className="row g-3 mb-3">
-                    <div className="col-md-6">
-                      <label className="form-label text-secondary small fw-bold">Event Date</label>
-                      <input
-                        type="date"
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center border border-secondary border-opacity-25" style={{ width: 32, height: 32 }}>
+                      <i className="bi bi-clock text-warning"></i>
+                    </div>
+                    <span className="small">{event.time}</span>
+                  </div>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <div className="bg-dark rounded-circle d-flex align-items-center justify-content-center border border-secondary border-opacity-25" style={{ width: 32, height: 32 }}>
+                      <i className="bi bi-geo-alt text-danger"></i>
+                    </div>
+                    <span className="small text-truncate">{event.venue}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card Footer: Actions */}
+              <div className="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-25">
+                <div className="small text-muted d-flex align-items-center gap-1">
+                  <i className="bi bi-people"></i>
+                  {event.contactPersons?.length || 0} Contacts
+                </div>
+
+                <div className="d-flex gap-2">
+                  <button
+                    className="card-action-btn btn-edit text-light"
+                    onClick={() => handleEditEvent(event)}
+                    title="Edit Event"
+                  >
+                    <i className="bi bi-pencil-fill small"></i>
+                  </button>
+
+                  <button
+                    className="card-action-btn btn-delete text-light"
+                    onClick={() => {
+                      setEventToDelete(event);
+                      setShowDeleteModal(true);
+                    }}
+                    title="Delete Event"
+                  >
+                    <i className="bi bi-trash-fill small"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* --- Unified Modal (Create & Edit) --- */}
+      {showModal && (
+        <div className={`custom-modal-overlay ${isClosing ? 'closing' : ''}`}>
+          <div className="custom-modal-content p-4 m-3">
+
+            {/* Modal Header */}
+            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3">
+              <h4 className="m-0 fw-bold text-white">
+                {editingId ? "Edit Event" : "Create New Event"}
+              </h4>
+              <button
+                onClick={closeModal}
+                className="btn btn-link text-secondary text-decoration-none fs-4 p-0"
+                style={{ lineHeight: 1 }}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="modal-body-custom">
+
+              {/* Event Name */}
+              <div className="mb-4">
+                <label className="form-label text-secondary small fw-bold">Event Name</label>
+                <input
+                  className="form-control form-control-dark mb-3 p-3"
+                  placeholder="Enter event name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
+
+                {/* Date & Time */}
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label text-secondary small fw-bold">Event Date</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-dark"
+                      value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label text-secondary small fw-bold">Event Time</label>
+                    <div className="d-flex gap-2">
+                      {/* Hours */}
+                      <select
                         className="form-control form-control-dark"
-                        value={form.date}
-                        onChange={(e) => setForm({ ...form, date: e.target.value })}
+                        value={hour}
+                        onChange={(e) => {
+                          setForm({
+                            ...form,
+                            time: `${e.target.value || "01"}:${minute || "00"} ${meridian || "AM"}`,
+                          });
+                        }}
+                      >
+                        <option value="">HH</option>
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const h = String(i + 1).padStart(2, "0");
+                          return (
+                            <option key={h} value={h}>
+                              {h}
+                            </option>
+                          );
+                        })}
+                      </select>
+
+                      {/* Minutes */}
+                      <select
+                        className="form-control form-control-dark"
+                        value={minute}
+                        onChange={(e) => {
+                          setForm({
+                            ...form,
+                            time: `${hour || "01"}:${e.target.value || "00"} ${meridian || "AM"}`,
+                          });
+                        }}
+                      >
+                        <option value="">MM</option>
+                        {["00", "15", "30", "45"].map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* AM / PM */}
+                      <select
+                        className="form-control form-control-dark"
+                        value={meridian}
+                        onChange={(e) => {
+                          setForm({
+                            ...form,
+                            time: `${hour || "01"}:${minute || "00"} ${e.target.value || "AM"}`,
+                          });
+                        }}
+                      >
+                        <option value="">AM/PM</option>
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Venue */}
+                <label className="form-label text-secondary small fw-bold">Venue</label>
+                <div className="input-group mb-4">
+                  <span className="input-group-text bg-dark border-secondary text-light">
+                    <i className="bi bi-geo-alt"></i>
+                  </span>
+                  <input
+                    className="form-control form-control-dark"
+                    placeholder="Venue location"
+                    value={form.venue}
+                    onChange={(e) => setForm({ ...form, venue: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="mb-4">
+                <label className="form-label text-secondary small fw-bold">Event Description</label>
+                <textarea
+                  className="form-control form-control-dark"
+                  rows={3}
+                  placeholder="Describe the event..."
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+
+              {/* Contact Persons */}
+              <div className="form-section mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="m-0 text-info">
+                    <i className="bi bi-person-lines-fill me-2"></i>Contact Persons
+                  </h6>
+                  <button
+                    className="btn btn-sm btn-outline-info"
+                    onClick={() => setForm({ ...form, contactPersons: [...form.contactPersons, { name: "", phone: "" }] })}
+                  >
+                    <i className="bi bi-plus-lg me-1"></i>Add
+                  </button>
+                </div>
+
+                {form.contactPersons.map((cp, i) => (
+                  <div key={i} className="row g-2 align-items-end mb-2">
+                    <div className="col">
+                      <label className="form-label text-secondary small">Name</label>
+                      <input
+                        className="form-control form-control-dark form-control-sm"
+                        value={cp.name}
+                        onChange={(e) => {
+                          const list = [...form.contactPersons];
+                          list[i].name = e.target.value;
+                          setForm({ ...form, contactPersons: list });
+                        }}
                       />
                     </div>
-
-                    <div className="col-md-6">
-                      <label className="form-label text-secondary small fw-bold">Event Time</label>
-                      <div className="d-flex gap-2">
-                        {/* Hours */}
-                        <select
-                          className="form-control form-control-dark"
-                          value={hour}
-                          onChange={(e) => {
-                            setForm({
-                              ...form,
-                              time: `${e.target.value || "01"}:${minute || "00"} ${meridian || "AM"}`,
-                            });
-                          }}
-                        >
-                          <option value="">HH</option>
-                          {Array.from({ length: 12 }, (_, i) => {
-                            const h = String(i + 1).padStart(2, "0");
-                            return (
-                              <option key={h} value={h}>
-                                {h}
-                              </option>
-                            );
-                          })}
-                        </select>
-
-                        {/* Minutes */}
-                        <select
-                          className="form-control form-control-dark"
-                          value={minute}
-                          onChange={(e) => {
-                            setForm({
-                              ...form,
-                              time: `${hour || "01"}:${e.target.value || "00"} ${meridian || "AM"}`,
-                            });
-                          }}
-                        >
-                          <option value="">MM</option>
-                          {["00", "15", "30", "45"].map((m) => (
-                            <option key={m} value={m}>
-                              {m}
-                            </option>
-                          ))}
-                        </select>
-
-                        {/* AM / PM */}
-                        <select
-                          className="form-control form-control-dark"
-                          value={meridian}
-                          onChange={(e) => {
-                            setForm({
-                              ...form,
-                              time: `${hour || "01"}:${minute || "00"} ${e.target.value || "AM"}`,
-                            });
-                          }}
-                        >
-                          <option value="">AM/PM</option>
-                          <option value="AM">AM</option>
-                          <option value="PM">PM</option>
-                        </select>
-                      </div>
+                    <div className="col">
+                      <label className="form-label text-secondary small">Phone</label>
+                      <input
+                        className="form-control form-control-dark form-control-sm"
+                        value={cp.phone}
+                        onChange={(e) => {
+                          const list = [...form.contactPersons];
+                          list[i].phone = e.target.value;
+                          setForm({ ...form, contactPersons: list });
+                        }}
+                      />
                     </div>
-                  </div>
-
-                  {/* Venue */}
-                  <label className="form-label text-secondary small fw-bold">Venue</label>
-                  <div className="input-group mb-4">
-                    <span className="input-group-text bg-dark border-secondary text-light">
-                      <i className="bi bi-geo-alt"></i>
-                    </span>
-                    <input
-                      className="form-control form-control-dark"
-                      placeholder="Venue location"
-                      value={form.venue}
-                      onChange={(e) => setForm({ ...form, venue: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="mb-4">
-                  <label className="form-label text-secondary small fw-bold">Event Description</label>
-                  <textarea
-                    className="form-control form-control-dark"
-                    rows={3}
-                    placeholder="Describe the event..."
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  />
-                </div>
-
-                {/* Contact Persons */}
-                <div className="form-section mb-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="m-0 text-info">
-                      <i className="bi bi-person-lines-fill me-2"></i>Contact Persons
-                    </h6>
-                    <button
-                      className="btn btn-sm btn-outline-info"
-                      onClick={() => setForm({ ...form, contactPersons: [...form.contactPersons, { name: "", phone: "" }] })}
-                    >
-                      <i className="bi bi-plus-lg me-1"></i>Add
-                    </button>
-                  </div>
-
-                  {form.contactPersons.map((cp, i) => (
-                    <div key={i} className="row g-2 align-items-end mb-2">
-                      <div className="col">
-                        <label className="form-label text-secondary small">Name</label>
-                        <input
-                          className="form-control form-control-dark form-control-sm"
-                          value={cp.name}
-                          onChange={(e) => {
-                            const list = [...form.contactPersons];
-                            list[i].name = e.target.value;
-                            setForm({ ...form, contactPersons: list });
-                          }}
-                        />
-                      </div>
-                      <div className="col">
-                        <label className="form-label text-secondary small">Phone</label>
-                        <input
-                          className="form-control form-control-dark form-control-sm"
-                          value={cp.phone}
-                          onChange={(e) => {
-                            const list = [...form.contactPersons];
-                            list[i].phone = e.target.value;
-                            setForm({ ...form, contactPersons: list });
-                          }}
-                        />
-                      </div>
-                      <div className="col-auto">
-                        <button
-                          className="btn btn-outline-danger btn-sm"
-                          disabled={form.contactPersons.length === 1}
-                          onClick={() => {
-                            const list = form.contactPersons.filter((_, index) => index !== i);
-                            setForm({ ...form, contactPersons: list });
-                          }}
-                        >
-                          <i className="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Registration Questions */}
-                <div className="form-section mb-4">
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h6 className="m-0 text-warning">
-                      <i className="bi bi-list-check me-2"></i>Registration Questions
-                    </h6>
-                    <button
-                      className="btn btn-sm btn-outline-warning"
-                      onClick={() => setForm({ ...form, registrationQuestions: [...form.registrationQuestions, ""] })}
-                    >
-                      <i className="bi bi-plus-lg me-1"></i>Add
-                    </button>
-                  </div>
-
-                  {form.registrationQuestions.map((q, i) => (
-                    <div key={i} className="d-flex gap-2 align-items-end mb-2">
-                      <div className="flex-grow-1">
-                        <label className="form-label text-secondary small">Question {i + 1}</label>
-                        <input
-                          className="form-control form-control-dark form-control-sm"
-                          value={q}
-                          onChange={(e) => {
-                            const list = [...form.registrationQuestions];
-                            list[i] = e.target.value;
-                            setForm({ ...form, registrationQuestions: list });
-                          }}
-                        />
-                      </div>
+                    <div className="col-auto">
                       <button
                         className="btn btn-outline-danger btn-sm"
-                        disabled={form.registrationQuestions.length === 1}
+                        disabled={form.contactPersons.length === 1}
                         onClick={() => {
-                          const list = form.registrationQuestions.filter((_, index) => index !== i);
-                          setForm({ ...form, registrationQuestions: list });
+                          const list = form.contactPersons.filter((_, index) => index !== i);
+                          setForm({ ...form, contactPersons: list });
                         }}
                       >
                         <i className="bi bi-trash"></i>
                       </button>
                     </div>
-                  ))}
-                </div>
-
-                {/* WhatsApp */}
-                <div className="mb-4">
-                  <label className="form-label text-secondary small fw-bold">WhatsApp Group Link</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-dark border-secondary text-success">
-                      <i className="bi bi-whatsapp"></i>
-                    </span>
-                    <input
-                      className="form-control form-control-dark"
-                      placeholder="https://chat.whatsapp.com/..."
-                      value={form.whatsappGroupLink}
-                      onChange={(e) => setForm({ ...form, whatsappGroupLink: e.target.value })}
-                    />
                   </div>
-                </div>
-
+                ))}
               </div>
 
-              {/* Modal Footer */}
-              <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary border-opacity-25">
-                <button className="btn btn-outline-light px-4 rounded-pill" onClick={closeModal}>
-                  Cancel
-                </button>
-                <button className="btn btn-success px-4 rounded-pill fw-bold" onClick={handleSaveEvent}>
-                  {editingId ? "Update Event" : "Save Event"}
-                </button>
+              {/* Registration Questions */}
+              <div className="form-section mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="m-0 text-warning">
+                    <i className="bi bi-list-check me-2"></i>Registration Questions
+                  </h6>
+                  <button
+                    className="btn btn-sm btn-outline-warning"
+                    onClick={() => setForm({ ...form, registrationQuestions: [...form.registrationQuestions, ""] })}
+                  >
+                    <i className="bi bi-plus-lg me-1"></i>Add
+                  </button>
+                </div>
+
+                {form.registrationQuestions.map((q, i) => (
+                  <div key={i} className="d-flex gap-2 align-items-end mb-2">
+                    <div className="flex-grow-1">
+                      <label className="form-label text-secondary small">Field {i + 1}</label>
+                      <input
+                        className="form-control form-control-dark form-control-sm"
+                        value={q}
+                        onChange={(e) => {
+                          const list = [...form.registrationQuestions];
+                          list[i] = e.target.value;
+                          setForm({ ...form, registrationQuestions: list });
+                        }}
+                      />
+                    </div>
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      disabled={form.registrationQuestions.length === 1}
+                      onClick={() => {
+                        const list = form.registrationQuestions.filter((_, index) => index !== i);
+                        setForm({ ...form, registrationQuestions: list });
+                      }}
+                    >
+                      <i className="bi bi-trash"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* WhatsApp */}
+              <div className="mb-4">
+                <label className="form-label text-secondary small fw-bold">WhatsApp Group Link</label>
+                <div className="input-group">
+                  <span className="input-group-text bg-dark border-secondary text-success">
+                    <i className="bi bi-whatsapp"></i>
+                  </span>
+                  <input
+                    className="form-control form-control-dark"
+                    placeholder="https://chat.whatsapp.com/..."
+                    value={form.whatsappGroupLink}
+                    onChange={(e) => setForm({ ...form, whatsappGroupLink: e.target.value })}
+                  />
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="d-flex justify-content-end gap-2 pt-3 border-top border-secondary border-opacity-25">
+              <button className="btn btn-outline-light px-4 rounded-pill" onClick={closeModal}>
+                Cancel
+              </button>
+              <button className="btn btn-success px-4 rounded-pill fw-bold" onClick={handleSaveEvent}>
+                {editingId ? "Update Event" : "Save Event"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* --- Delete Confirmation Modal --- */}
+      {showDeleteModal && (
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content modal-content-glass rounded-4 p-3 text-center">
+              <div className="modal-body">
+                <div className="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-3 mb-3">
+                  <i className="bi bi-exclamation-triangle-fill fs-3"></i>
+                </div>
+                <h4 className="fw-bold mb-2 text-white">Delete Event?</h4>
+                <p className="text-secondary mb-4">Are you sure you want to remove <strong>{eventToDelete?.name}</strong>? This action cannot be undone.</p>
+                <div className="d-flex gap-2 justify-content-center">
+                  <button className="btn btn-outline-light rounded-pill px-4" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+                  <button className="btn btn-danger rounded-pill px-4 fw-bold" onClick={handleDeleteEvent}>Delete</button>
+                </div>
               </div>
             </div>
           </div>
-        )}
-        {showDeleteModal && (
-          <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content modal-content-glass rounded-4 p-3 text-center">
-                <div className="modal-body">
-                  <div className="bg-danger bg-opacity-10 text-danger rounded-circle d-inline-flex p-3 mb-3">
-                    <i className="bi bi-exclamation-triangle-fill fs-3"></i>
-                  </div>
-                  <h4 className="fw-bold mb-2 text-white">Delete Member?</h4>
-                  <p className="text-secondary mb-4">Are you sure you want to remove <strong>{eventToDelete?.name}</strong>? This action cannot be undone.</p>
-                  <div className="d-flex gap-2 justify-content-center">
-                    <button className="btn btn-outline-light rounded-pill px-4" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-                    <button className="btn btn-danger rounded-pill px-4 fw-bold" onClick={handleDeleteEvent}>Delete</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </AdminLayout>
   );
 };
 
