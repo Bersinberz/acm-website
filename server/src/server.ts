@@ -31,12 +31,15 @@ if (!fs.existsSync(uploadsPath)) {
 // Serve uploaded images
 app.use("/uploads", express.static(uploadsPath));
 
-// API Routes
+// Admin API Routes
 app.use("/api/admin/members", memberRoutes);
 app.use("/api/admin/eventmanager", eventmanagerRoutes);
 app.use("/api/admin/recruitments", recruitmentsRouter)
 app.use("/api/admin/dashboard", dashboardRoutes)
 app.use("/api/admin/settings", adminSettingsRoutes);
+
+// Website API Routes
+app.use("/api/home/submit", )
 
 // Root endpoint check
 app.get("/", (_, res) => {
