@@ -35,7 +35,6 @@ function App() {
   /* ---------------- ADMIN ROUTES ---------------- */
   if (isAdminRoute) {
     return (
-      <div className="containerapp">
         <Routes location={location} key={location.pathname}>
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
@@ -44,7 +43,6 @@ function App() {
           <Route path="/admin/recruitments" element={<Recruitments />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
         </Routes>
-      </div>
     );
   }
 

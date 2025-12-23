@@ -163,7 +163,7 @@ const Navbar = () => {
 
         .button-fest:hover {
           box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.3);
-          color: #000000ff;
+          color: #fffafaff;
           text-decoration: none; /* Ensures no underline on button hover */
         }
 

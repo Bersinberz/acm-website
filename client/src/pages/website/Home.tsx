@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fa';
 import { submitContactForm, type ContactFormData, type AdminSettings, getAdminSettings } from '../../services/website/Homeservice';
 import { FloatingOrb } from '../../components/StatusMessage';
+import CopyrightFooter from '../../components/Footer';
 
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -734,16 +735,7 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className='cpoy-cont'>
-          <div className='Copyrights'>
-            <h2>© 2025 SIST ACM SIGAI STUDENT CHAPTER</h2>
-            <p>
-              Website developed by ADITYA SAI TEJA B |
-              Designed by MANISRI VENKATESH |
-              Backend development: BHUVANESH, DEVENDRA REDDY, BERSIN and RAM PRADEEP
-            </p>
-          </div>
-        </div>
+        <CopyrightFooter />
       </footer>
 
       <AnimatePresence>

@@ -654,7 +654,7 @@ const Members = () => {
                                             <div className="col-12">
                                                 <label className="form-label text-secondary small text-uppercase fw-bold">Full Name</label>
                                                 <input
-                                                    type="text" className="form-control form-control-glass" placeholder="e.g. John Doe"
+                                                    type="text" className="form-control form-control-glass"
                                                     value={showEditModal ? editMember?.name : newMember.name}
                                                     onChange={e => showEditModal ? setEditMember({ ...editMember!, name: e.target.value }) : setNewMember({ ...newMember, name: e.target.value })}
                                                 />

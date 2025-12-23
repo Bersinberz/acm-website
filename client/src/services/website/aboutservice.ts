@@ -15,7 +15,7 @@ export interface Member {
 }
 
 /* ---------- API ---------- */
-export const getMembers = async (): Promise<Member[]> => {
-  const response = await axiosInstance.get("/about/getallmem");
-  return response.data;
+export const getMembers = async () => {
+    const response = await axiosInstance.get("/about/getallmem");
+    return response.data;
 };
