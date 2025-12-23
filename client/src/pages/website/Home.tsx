@@ -1,4 +1,4 @@
-import React, { type FormEvent, useState } from 'react';
+import React, { type FormEvent, useEffect, useState } from 'react';
 import titlevedio from '../../assets/HomePage/Titlevedio.mp4';
 import { motion as m, AnimatePresence } from "framer-motion";
 import { fadeIn } from '../../components/transitions';
@@ -6,37 +6,58 @@ import ne from '../../assets/HomePage/new.png';
 import videoB from '../../assets/HomePage/SISTACMSIGAI.mp4';
 import sat from '../../assets/HomePage/Sathyabama Institute of Science and Technology.png';
 import grp from '../../assets/HomePage/grp-01.jpeg.jpg';
+import { GlobalLoader } from "../../components/GlobalLoader";
 
 // Import Icons from react-icons
-import { 
-  FaMapMarkerAlt, 
-  FaEnvelope, 
-  FaPhoneAlt, 
-  FaTwitter, 
-  FaInstagram, 
-  FaLinkedin, 
+import {
+  FaMapMarkerAlt,
+  FaEnvelope,
+  FaPhoneAlt,
+  FaTwitter,
+  FaInstagram,
+  FaLinkedin,
   FaTimes,
-  FaPaperPlane 
+  FaPaperPlane
 } from 'react-icons/fa';
 
 // Import service
-import { submitContactForm, type ContactFormData } from '../../services/website/Homeservice';
+import { submitContactForm, type ContactFormData, type AdminSettings, getAdminSettings } from '../../services/website/Homeservice';
+import { FloatingOrb } from '../../components/StatusMessage';
 
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [statusVisible, setStatusVisible] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState<"success" | "error">("success");
+  const [adminSettings, setAdminSettings] = useState<AdminSettings | null>(null);
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const data = await getAdminSettings();
+        setAdminSettings(data);
+      } catch (err) {
+        console.error("Failed to load admin settings", err);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const submitForm = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setIsSubmitting(true);
-    
+    setIsLoading(true);
+
     const form = e.target as HTMLFormElement;
-    
-    // Get form values
+
     const formData: ContactFormData = {
       Firstname: (form.elements.namedItem('Firstname') as HTMLInputElement).value,
       Lastname: (form.elements.namedItem('Lastname') as HTMLInputElement).value,
@@ -46,23 +67,56 @@ const Home: React.FC = () => {
     };
 
     try {
-      // Use the service
       const result = await submitContactForm(formData);
-      
-      console.log("Success:", result);
-      alert(result.message || "Form submitted successfully!");
+
+      // ✅ SUCCESS MESSAGE
+      setStatusType("success");
+      setStatusMessage(result.message || "Message sent successfully!");
+      setStatusVisible(true);
+
       setIsModalOpen(false);
       form.reset();
     } catch (error) {
       console.error("Form submission error:", error);
-      alert("Failed to submit form. Please try again.");
+
+      // ❌ ERROR MESSAGE
+      setStatusType("error");
+      setStatusMessage("Failed to submit form. Please try again.");
+      setStatusVisible(true);
     } finally {
       setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
+  const toTitleCase = (text: string) =>
+    text
+      .toLowerCase()
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
+  useEffect(() => {
+    if (statusVisible) {
+      const timer = setTimeout(() => setStatusVisible(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusVisible]);
+
+
   return (
     <>
+
+      {/* Global Fullscreen Loader */}
+      <GlobalLoader isLoading={isLoading} />
+
+      {/* Status Toast Message */}
+      <FloatingOrb
+        isVisible={statusVisible}
+        message={statusMessage}
+        type={statusType}
+        onClose={() => setStatusVisible(false)}
+      />
       <style>{`
         /* --- VIDEO CONTROLS HIDING --- */
         video::-webkit-media-controls { display: none !important; }
@@ -426,37 +480,43 @@ const Home: React.FC = () => {
             .modal-content-styled { padding: 30px 20px; width: 95%; max-height: 80vh;}
         }
       `}</style>
-      
+
       <div className='scroll-watcher'></div>
 
+
       <div className='main'>
-        <video 
-          src={titlevedio} autoPlay loop muted playsInline 
+        <video
+          src={titlevedio} autoPlay loop muted playsInline
           disablePictureInPicture={true}
           controls={false}
           style={{ pointerEvents: 'none' }}
         />
       </div>
 
+
       <div className='About'>
         {/* ... (Content sections - kept same as provided) ... */}
         <div className='Aboutt'>
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='aboutsec'>
             <h2 className='about-heading'>ABOUT <span>SIST ACM SIGAI</span></h2>
-            <p className='about-paragraph'>Founded on the 25th of March 2024, SIST ACM SIGAI is the first SIGAI student chapter in Tamil Nadu...</p>
+            <p className='about-paragraph'>
+              {adminSettings?.about}
+            </p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='main-about'>
-            <video 
-                src={videoB} autoPlay loop controls={false} muted playsInline 
-                disablePictureInPicture={true} 
-                style={{ pointerEvents: 'none' }} 
+            <video
+              src={videoB} autoPlay loop controls={false} muted playsInline
+              disablePictureInPicture={true}
+              style={{ pointerEvents: 'none' }}
             />
           </m.div>
 
           <m.div variants={fadeIn("up", 0.4)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.5 }} className='mission'>
             <h1><span>OUR</span> MISSION</h1>
-            <p className='mission-paragraph'>At SIST ACM SIGAI Student Chapter, we're on a mission to ignite curiosity, foster collaboration...</p>
+            <p className='mission-paragraph'>
+              {adminSettings?.mission}
+            </p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='image-container'>
@@ -465,7 +525,9 @@ const Home: React.FC = () => {
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='vision'>
             <h1><span>OUR</span> VISION</h1>
-            <p className='mission-paragraph'>We envision a vibrant community where students from all backgrounds come together...</p>
+            <p className='mission-paragraph'>
+              {adminSettings?.vision}
+            </p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" exit="exit" viewport={{ once: false, amount: 0.7 }} className='image-container'>
@@ -474,7 +536,9 @@ const Home: React.FC = () => {
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='ideology'>
             <h1><span>OUR</span> IDEOLOGY</h1>
-            <p className='mission-paragraph'>In our student chapter, we're not just about AI; we're about people...</p>
+            <p className='mission-paragraph'>
+              {adminSettings?.ideology}
+            </p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='image-container'>
@@ -486,165 +550,170 @@ const Home: React.FC = () => {
       {/* --- FOOTER --- */}
       <footer className="main-footer">
         <div className="footer-container">
-            <div className="footer-col">
-                <h3>Contact Us</h3>
-                <div className="contact-item">
-                    <span className="icon"><FaMapMarkerAlt /></span>
-                    <p>
-                        <a href='https://www.sathyabama.ac.in/' target="_blank" rel="noopener noreferrer">
-                          Sathyabama Institute of Science and Technology Semmencheri, Chennai, India
-                        </a><br />
-                    </p>
-                </div>
-                <div className="contact-item">
-                    <span className="icon"><FaEnvelope /></span>
-                    <a href='mailto:sist.sigai@gmail.com'>sist.sigai@gmail.com</a>
-                </div>
-                <div className="contact-item">
-                    <span className="icon"><FaPhoneAlt /></span>
-                    <a href='tel:+916383594324'>+91 6383594324</a>
-                </div>
+          <div className="footer-col">
+            <h3>Contact Us</h3>
+            <div className="contact-item">
+              <span className="icon"><FaMapMarkerAlt /></span>
+              <p>
+                <a
+                  href={adminSettings?.contact.location}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {adminSettings?.contact.location
+                    ? toTitleCase(adminSettings.contact.location)
+                    : ""}
+                </a>
+              </p>
             </div>
-
-            <div className="footer-col footer-center">
-                <div className="footer-brand">SIST ACM SIGAI</div>
-                <p className="cta-text">Have questions or want to collaborate?</p>
-                
-                <button className="write-us-btn" onClick={toggleModal}>
-                    Write to Us <FaEnvelope style={{marginLeft:'8px', display:'inline'}}/>
-                </button>
-
-                <div className="social-icons">
-                    <a href='https://x.com/sist_sigai' target="_blank" aria-label="Twitter" className="social-icon twitter">
-                      <FaTwitter />
-                    </a>
-                    <a href='https://www.instagram.com/sist_sigai?igsh=bzBjc3Jmam85NTdn' target="_blank" aria-label="Instagram" className="social-icon instagram">
-                      <FaInstagram />
-                    </a>
-                    <a href='https://www.linkedin.com/company/sist-acm-sigai-student-chapter/' target="_blank" aria-label="LinkedIn" className="social-icon linkedin">
-                      <FaLinkedin />
-                    </a>
-                </div>
+            <div className="contact-item">
+              <span className="icon"><FaEnvelope /></span>
+              <a href={`mailto:${adminSettings?.contact.email}`}>
+                {adminSettings?.contact.email}
+              </a>
             </div>
-
-            <div className="footer-col footer-map">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.5412320274245!2d80.22350167642874!3d12.87288088743351!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a525b8c90befe2b%3A0x170ab8b5b21bb530!2sSathyabama%20Institute%20of%20Science%20and%20Technology!5e0!3m2!1sen!2sin!4v1710506289648!5m2!1sen!2sin"
-                    title="Sathyabama Location"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                ></iframe>
+            <div className="contact-item">
+              <span className="icon"><FaPhoneAlt /></span>
+              <a href={`tel:${adminSettings?.contact.phone}`}>
+                {adminSettings?.contact.phone}
+              </a>
             </div>
+          </div>
+
+          <div className="footer-col footer-center">
+            <div className="footer-brand">
+              {adminSettings?.orgName}
+            </div>
+            <p className="cta-text">Have questions or want to collaborate?</p>
+
+            <button className="write-us-btn" onClick={toggleModal}>
+              Write to Us <FaEnvelope style={{ marginLeft: '8px', display: 'inline' }} />
+            </button>
+
+            <div className="social-icons">
+              <a href={adminSettings?.socials.twitter} target="_blank" aria-label="Twitter" className="social-icon twitter">
+                <FaTwitter />
+              </a>
+              <a href={adminSettings?.socials.instagram} target="_blank" aria-label="Instagram" className="social-icon instagram">
+                <FaInstagram />
+              </a>
+              <a href={adminSettings?.socials.linkedin} target="_blank" aria-label="LinkedIn" className="social-icon linkedin">
+                <FaLinkedin />
+              </a>
+            </div>
+          </div>
+
+          <div className="footer-col footer-map">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.5412320274245!2d80.22350167642874!3d12.87288088743351!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a525b8c90befe2b%3A0x170ab8b5b21bb530!2sSathyabama%20Institute%20of%20Science%20and%20Technology!5e0!3m2!1sen!2sin!4v1710506289648!5m2!1sen!2sin"
+              title="Sathyabama Location"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+            ></iframe>
+          </div>
         </div>
 
         <div className='cpoy-cont'>
-           <div className='Copyrights'>
-             <h2>© 2025 SIST ACM SIGAI STUDENT CHAPTER</h2>
-             <p>
-                Website developed by ADITYA SAI TEJA B | 
-                Designed by MANISRI VENKATESH | 
-                Backend development: BHUVANESH, DEVENDRA REDDY, BERSIN and RAM PRADEEP
-             </p>
-           </div>
+          <div className='Copyrights'>
+            <h2>© 2025 SIST ACM SIGAI STUDENT CHAPTER</h2>
+            <p>
+              Website developed by ADITYA SAI TEJA B |
+              Designed by MANISRI VENKATESH |
+              Backend development: BHUVANESH, DEVENDRA REDDY, BERSIN and RAM PRADEEP
+            </p>
+          </div>
         </div>
       </footer>
 
       {/* --- ANIMATIC WIDER MODAL --- */}
       <AnimatePresence>
         {isModalOpen && (
-            <div className="modal-overlay">
-            <m.div 
-                className="modal-content-styled"
-                initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 50 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          <div className="modal-overlay">
+            <m.div
+              className="modal-content-styled"
+              initial={{ opacity: 0, scale: 0.8, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 50 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
             >
-                <div className="modal-decor"></div>
-                
-                <button className="close-modal" onClick={toggleModal}><FaTimes /></button>
-                
-                <h3 style={{textAlign: 'center', marginBottom: '30px', color: '#fff', fontSize: '1.8rem', position:'relative', zIndex:1}}>
-                    Send a Message
-                </h3>
-                
-                <form className="form" onSubmit={submitForm} style={{position:'relative', zIndex:1}}>
+              <div className="modal-decor"></div>
+
+              <button className="close-modal" onClick={toggleModal}><FaTimes /></button>
+
+              <h3 style={{ textAlign: 'center', marginBottom: '30px', color: '#fff', fontSize: '1.8rem', position: 'relative', zIndex: 1 }}>
+                Send a Message
+              </h3>
+
+              <form className="form" onSubmit={submitForm} style={{ position: 'relative', zIndex: 1 }}>
                 <div className='formBx'>
-                    {/* First Name & Last Name Side by Side */}
-                    <div className='inputbx'>
-                        <span>First Name</span>
-                        <input 
-                          type='text' 
-                          name='Firstname' 
-                          required 
-                          disabled={isSubmitting}
-                        />
-                    </div>
-                    <div className='inputbx'>
-                        <span>Last Name</span>
-                        <input 
-                          type='text' 
-                          name='Lastname' 
-                          required 
-                          disabled={isSubmitting}
-                        />
-                    </div>
-                    
-                    {/* Email & Mobile Side by Side */}
-                    <div className='inputbx'>
-                        <span>Email</span>
-                        <input 
-                          type='email' 
-                          name='Email' 
-                          required 
-                          disabled={isSubmitting}
-                        />
-                    </div>
-                    <div className='inputbx'>
-                        <span>Mobile</span>
-                        <input 
-                          type='tel' 
-                          name='Mobile' 
-                          pattern="[+]{1}[0-9]{2} [0-9]{10}" 
-                          required 
-                          disabled={isSubmitting}
-                        />
-                    </div>
-                    
-                    {/* Message - Full Width */}
-                    <div className='inputbx full-width'>
-                        <span>Message</span>
-                        <textarea 
-                          name='Message' 
-                          required 
-                          disabled={isSubmitting}
-                        ></textarea>
-                    </div>
-                    
-                    {/* Submit - Full Width */}
-                    <div className='inputbx full-width'>
-                        <button 
-                          type='submit' 
-                          className="submit-btn"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              SENDING...
-                              <div className="spinner"></div>
-                            </>
-                          ) : (
-                            <>
-                              SEND MESSAGE <FaPaperPlane />
-                            </>
-                          )}
-                        </button>
-                    </div>
+                  {/* First Name & Last Name Side by Side */}
+                  <div className='inputbx'>
+                    <span>First Name</span>
+                    <input
+                      type='text'
+                      name='Firstname'
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  <div className='inputbx'>
+                    <span>Last Name</span>
+                    <input
+                      type='text'
+                      name='Lastname'
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  {/* Email & Mobile Side by Side */}
+                  <div className='inputbx'>
+                    <span>Email</span>
+                    <input
+                      type='email'
+                      name='Email'
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  <div className='inputbx'>
+                    <span>Mobile</span>
+                    <input
+                      type='tel'
+                      name='Mobile'
+                      pattern="[0-9]{10}"
+                      inputMode="numeric"
+                      title="Enter a valid 10-digit mobile number"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  {/* Message - Full Width */}
+                  <div className='inputbx full-width'>
+                    <span>Message</span>
+                    <textarea
+                      name='Message'
+                      required
+                      disabled={isSubmitting}
+                    ></textarea>
+                  </div>
+
+                  {/* Submit - Full Width */}
+                  <div className='inputbx full-width'>
+                    <button
+                      type='submit'
+                      className="submit-btn"
+                      disabled={isSubmitting}
+                    >
+                      SEND MESSAGE <FaPaperPlane />
+                    </button>
+                  </div>
                 </div>
-                </form>
+              </form>
             </m.div>
-            </div>
+          </div>
         )}
       </AnimatePresence>
     </>
