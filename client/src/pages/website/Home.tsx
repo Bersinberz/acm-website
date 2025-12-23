@@ -503,6 +503,9 @@ const Home: React.FC = () => {
                 border-bottom: none;
                 margin-top: 20px;
             }
+            .image-container img {
+              width: 95%;
+            }
             /* Reset Contact Items to work with mobile alignment below */
             .contact-item {
                 justify-content: center;
