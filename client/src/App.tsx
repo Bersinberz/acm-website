@@ -1,18 +1,22 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
 import Dashboard from "./pages/Admin/Dashboard";
 import Members from "./pages/Admin/Members";
 import EventManager from "./pages/Admin/EventManager";
 import Recruitments from "./pages/Admin/Recruitments";
 import AdminSettings from "./pages/Admin/Adminsettings";
 import AdminLogin from "./pages/Admin/AdminLogin";
-import Home from "./pages/website/Home";
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import LogoLoading from "./components/logoLoader";
 
-import "./App.css"
+import Home from "./pages/website/Home";
+import About from "./pages/website/Aboutus";
+
 import Nav from "./components/Navbar";
 import ScrollToTop from "./components/ScrolltoTop";
+import LogoLoading from "./components/logoLoader";
+
+import "./App.css";
 
 function App() {
   const location = useLocation();
@@ -26,8 +30,9 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
+  /* ---------------- ADMIN ROUTES ---------------- */
   if (isAdminRoute) {
     return (
       <div className="containerapp">
@@ -43,10 +48,12 @@ function App() {
     );
   }
 
+  /* ---------------- WEBSITE ROUTES ---------------- */
   return (
     <div className="containerapp">
       <Nav />
-      <AnimatePresence mode='wait'>
+
+      <AnimatePresence mode="wait">
         {loading ? (
           <LogoLoading />
         ) : (
@@ -59,6 +66,7 @@ function App() {
           >
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
             </Routes>
           </motion.div>
         )}
@@ -67,6 +75,7 @@ function App() {
   );
 }
 
+/* ---------------- ROOT WRAPPER ---------------- */
 function Root() {
   return (
     <Router>

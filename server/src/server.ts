@@ -8,8 +8,9 @@ import memberRoutes from "./Routes/memberRoutes";
 import eventmanagerRoutes from "./Routes/EventmanagerRoutes"
 import recruitmentsRouter from "./Routes/recruitmentRoutes"
 import adminSettingsRoutes from "./Routes/adminSettingsRoutes";
-import dashboardRoutes from "./Routes/DashboardRoutes";
 import homeRoutes from "./Routes/homeRoutes"
+import dashboardRoutes from "./Routes/dashboardRoutes";
+import aboutRoutes from "./Routes/aboutRoute"
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use("/api/admin/settings", adminSettingsRoutes);
 
 // Website API Routes
 app.use("/api/home", homeRoutes)
+app.use("/api/about", aboutRoutes)
 
 // Root endpoint check
 app.get("/", (_, res) => {

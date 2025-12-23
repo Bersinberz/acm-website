@@ -7,8 +7,6 @@ import videoB from '../../assets/HomePage/SISTACMSIGAI.mp4';
 import sat from '../../assets/HomePage/Sathyabama Institute of Science and Technology.png';
 import grp from '../../assets/HomePage/grp-01.jpeg.jpg';
 import { GlobalLoader } from "../../components/GlobalLoader";
-
-// Import Icons from react-icons
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -19,8 +17,6 @@ import {
   FaTimes,
   FaPaperPlane
 } from 'react-icons/fa';
-
-// Import service
 import { submitContactForm, type ContactFormData, type AdminSettings, getAdminSettings } from '../../services/website/Homeservice';
 import { FloatingOrb } from '../../components/StatusMessage';
 
@@ -28,7 +24,6 @@ const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
   const [statusVisible, setStatusVisible] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error">("success");
@@ -37,6 +32,7 @@ const Home: React.FC = () => {
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -69,7 +65,6 @@ const Home: React.FC = () => {
     try {
       const result = await submitContactForm(formData);
 
-      // ✅ SUCCESS MESSAGE
       setStatusType("success");
       setStatusMessage(result.message || "Message sent successfully!");
       setStatusVisible(true);
@@ -79,7 +74,6 @@ const Home: React.FC = () => {
     } catch (error) {
       console.error("Form submission error:", error);
 
-      // ❌ ERROR MESSAGE
       setStatusType("error");
       setStatusMessage("Failed to submit form. Please try again.");
       setStatusVisible(true);
@@ -103,22 +97,23 @@ const Home: React.FC = () => {
     }
   }, [statusVisible]);
 
-
   return (
     <>
-
-      {/* Global Fullscreen Loader */}
       <GlobalLoader isLoading={isLoading} />
 
-      {/* Status Toast Message */}
       <FloatingOrb
         isVisible={statusVisible}
         message={statusMessage}
         type={statusType}
         onClose={() => setStatusVisible(false)}
       />
+
       <style>{`
-        /* --- VIDEO CONTROLS HIDING --- */
+        /* --- GLOBAL RESETS --- */
+        * {
+            box-sizing: border-box;
+        }
+
         video::-webkit-media-controls { display: none !important; }
         video::-webkit-media-controls-enclosure { display: none !important; }
         video::-webkit-media-controls-picture-in-picture-button { display: none !important; }
@@ -130,13 +125,118 @@ const Home: React.FC = () => {
           100% { background-position: 0 50%; }
         }
 
-        /* --- PROFESSIONAL FULL FOOTER STYLES --- */
+        /* --- LAYOUT CONTAINERS --- */
+        .main {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background: #000; 
+        }
+
+        /* Fullscreen Hero Video (Desktop Default) */
+        .main video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Keeps fullscreen on desktop */
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 0;
+        }
+
+        .About {
+            position: relative;
+            z-index: 1;
+            background: inherit;
+            width: 100%;
+            overflow-x: hidden; 
+        }
+
+        .Aboutt {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* --- SECTIONS & SPACING --- */
+        .ideology, .vision, .mission, .main-about, .image-mission, .aboutsec, .image-container {
+            margin-top: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .main-about {
+            margin-top: 100px;
+            width: 100%;
+        }
+
+        /* Responsive Video Container for Content */
+        .main-about video {
+            position: relative;
+            width: 80%;
+            max-width: 900px;
+            height: auto;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            object-fit: cover;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h1, .about-heading {
+            color: white;
+            font-size: clamp(28px, 5vw, 50px);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        h1 span, .about-heading span {
+            color: #0099ff;
+        }
+
+        p.mission-paragraph, p.about-paragraph {
+            color: #e0e0e0;
+            font-size: clamp(16px, 2vw, 20px);
+            font-weight: 300;
+            font-family: "Roboto", sans-serif;
+            line-height: 1.6;
+            text-align: justify;
+            max-width: 900px;
+            padding: 0 10px;
+        }
+
+        /* --- IMAGES --- */
+.image-container img {
+    width: 80%;
+    max-width: 900px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+        
+        .Aboutt img {
+             max-width: 100%;
+             height: auto;
+        }
+
+        /* --- FOOTER --- */
         .main-footer {
             background: linear-gradient(to right, #000428, #004e92);
             color: #ffffff;
             padding: 60px 0 0 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            position: relative;
             width: 100%;
             margin-top: 50px;
         }
@@ -144,9 +244,9 @@ const Home: React.FC = () => {
         .footer-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 40px 40px 40px;
+            padding: 0 20px 40px 20px;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 40px;
             align-items: start;
         }
@@ -173,8 +273,8 @@ const Home: React.FC = () => {
         .contact-item .icon {
             font-size: 1.2rem;
             margin-right: 15px;
-            color: #5CA0F2; 
-            margin-top: 3px;
+            color: #5CA0F2;
+            min-width: 20px;
         }
 
         .contact-item p a, .contact-item > a {
@@ -182,6 +282,7 @@ const Home: React.FC = () => {
             text-decoration: none;
             transition: color 0.3s;
             font-weight: 500;
+            word-break: break-word;
         }
 
         .contact-item p a:hover, .contact-item > a:hover {
@@ -193,7 +294,6 @@ const Home: React.FC = () => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
         }
 
         .footer-brand {
@@ -203,12 +303,6 @@ const Home: React.FC = () => {
             margin-bottom: 10px;
             letter-spacing: 2px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-
-        .cta-text {
-            margin-bottom: 20px;
-            color: #ccc;
-            font-size: 1rem;
         }
 
         .write-us-btn {
@@ -223,6 +317,7 @@ const Home: React.FC = () => {
             transition: background 0.3s ease, box-shadow 0.3s ease;
             margin-bottom: 30px;
             font-weight: 700;
+            white-space: nowrap;
         }
 
         .write-us-btn:hover {
@@ -233,12 +328,14 @@ const Home: React.FC = () => {
         .social-icons {
             display: flex;
             gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .social-icon {
             width: 45px;
             height: 45px;
-            background: transparent;
+            background: rgba(255,255,255,0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -246,12 +343,13 @@ const Home: React.FC = () => {
             text-decoration: none;
             font-size: 1.4rem;
             color: #e0e0e0;
-            transition: color 0.3s ease, transform 0.3s ease;
+            transition: all 0.3s ease;
         }
 
-        .social-icon.twitter:hover { color: #1DA1F2; }
-        .social-icon.instagram:hover { color: #E1306C; }
-        .social-icon.linkedin:hover { color: #0077B5; }
+        .social-icon:hover { transform: translateY(-3px); }
+        .social-icon.twitter:hover { color: #1DA1F2; background: rgba(29, 161, 242, 0.1); }
+        .social-icon.instagram:hover { color: #E1306C; background: rgba(225, 48, 108, 0.1); }
+        .social-icon.linkedin:hover { color: #0077B5; background: rgba(0, 119, 181, 0.1); }
 
         .footer-map iframe {
             width: 100%;
@@ -265,181 +363,44 @@ const Home: React.FC = () => {
             background: linear-gradient(45deg, #F5F7F6, #5CA0F2);
             background-size: 300% 300%;
             animation: gradientShift 12s ease-in-out infinite;
-            padding: 20px 0;
+            padding: 20px;
             text-align: center;
             width: 100%;
-            margin-top: 0;
         }
 
         .Copyrights { color: #000; }
-        .Copyrights h2 { font-size: 1.1rem; margin-bottom: 10px; font-weight: 800; letter-spacing: 1px; }
-        .Copyrights p { 
-            font-size: 0.9rem; 
-            margin: 5px 0; 
-            font-weight: 600; 
+        .Copyrights h2 { font-size: 1rem; margin-bottom: 10px; font-weight: 800; }
+        .Copyrights p {
+            font-size: 0.85rem;
+            margin: 5px 0;
+            font-weight: 600;
             line-height: 1.6;
         }
 
-        /* --- MODAL STYLES --- */
+        /* --- MODAL --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
             display: flex; justify-content: center; align-items: center;
             z-index: 10000;
+            padding: 20px;
         }
-        
+
         .modal-content-styled {
             background: linear-gradient(135deg, #000428, #004e92);
-            padding: 50px 40px;
-            width: 90%;
+            padding: 40px;
+            width: 100%;
             max-width: 800px;
             border-radius: 20px;
             position: relative;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.1);
             color: #fff;
-
-            /* SCROLLABLE PROPERTIES */
-            max-height: 85vh; /* Limits height to 85% of viewport */
-            overflow-y: auto; /* Enables vertical scrolling */
-            overflow-x: hidden; /* Hides horizontal scrolling */
-            
-            /* Firefox Scrollbar Support */
-            scrollbar-width: thin;
-            scrollbar-color: #5CA0F2 #000428;
-        }
-
-        /* --- CUSTOM UNIQUE SCROLLBAR DESIGN (Webkit/Chrome/Edge) --- */
-        .modal-content-styled::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        .modal-content-styled::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 0 20px 20px 0; /* Match modal rounded corners on the right */
-            margin: 20px 0; /* Add some space top/bottom */
-        }
-
-        .modal-content-styled::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #5CA0F2, #004e92);
-            border-radius: 10px;
-            border: 2px solid rgba(0, 4, 40, 0.8); /* Creates a 'floating' look */
-        }
-
-        .modal-content-styled::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #7eb6ff, #1c66a6);
-        }
-
-        /* Form Grid Layout */
-        .formBx {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            width: 100%;
-        }
-
-        .inputbx.full-width {
-            grid-column: span 2;
-        }
-
-        .inputbx {
+            max-height: 90vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            width: 100%;
-        }
-
-        .inputbx span { 
-            display: block; 
-            margin-bottom: 5px; 
-            font-weight: 600; 
-            font-size: 0.95rem; 
-            color: #e0e0e0; 
-            transform-origin: left;
-            transition: color 0.3s;
-        }
-
-        .inputbx:focus-within span {
-            color: #5CA0F2;
-        }
-
-        /* --- INPUT LINE STYLES --- */
-        .inputbx input, .inputbx textarea {
-            width: 100%; 
-            box-sizing: border-box; 
-            padding: 10px 5px; 
-            border: none;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3); 
-            border-radius: 0; 
-            font-size: 1rem; 
-            color: #fff; 
-            background: transparent; 
-            outline: none; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-
-        .inputbx input::placeholder, .inputbx textarea::placeholder {
-            color: rgba(255, 255, 255, 0.4);
-        }
-
-        .inputbx input:focus, .inputbx textarea:focus { 
-            border-bottom: 2px solid #5CA0F2; 
-            background: transparent; 
-            box-shadow: 0 5px 10px -2px rgba(92, 160, 242, 0.5); 
-        }
-
-        .inputbx textarea {
-            min-height: 80px;
-            resize: vertical;
-            margin-top: 10px;
-        }
-
-        /* Sticky Close Button (Optional: to keep it visible while scrolling) */
-        .close-modal { 
-            position: absolute; 
-            top: 20px; 
-            right: 20px; 
-            background: rgba(255, 255, 255, 0.1); 
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 1.2rem; 
-            cursor: pointer; 
-            color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 10;
-        }
-
-        .close-modal:hover {
-            background: #ff4d4d;
-            border-color: #ff4d4d;
-            color: #fff;
-        }
-
-        .submit-btn {
-            background: #5CA0F2;
-            color: #000428; 
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        .submit-btn:hover { 
-            background: #fff;
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
         }
 
         .modal-decor {
@@ -453,101 +414,257 @@ const Home: React.FC = () => {
             pointer-events: none;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 35px; height: 35px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1rem;
+            cursor: pointer;
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 10;
         }
 
-        .spinner {
-            display: inline-block;
-            margin-left: 10px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #fff;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .close-modal:hover { background: #ff4d4d; border-color: #ff4d4d; }
+
+        .formBx {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .inputbx.full-width { grid-column: span 2; }
+
+        .inputbx {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .inputbx span {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+
+        .inputbx input, .inputbx textarea {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            font-size: 1rem;
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+
+        .inputbx input:focus, .inputbx textarea:focus {
+            border-bottom: 2px solid #5CA0F2;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .submit-btn {
+            background: #5CA0F2;
+            color: #000428;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+
+        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* --- MEDIA QUERIES --- */
+
+        @media (max-width: 1024px) {
+            .footer-container {
+                gap: 20px;
+            }
         }
 
         @media (max-width: 900px) {
-            .footer-container { grid-template-columns: 1fr; gap: 40px; text-align: center; }
-            .footer-col h3 { border-bottom: none; }
-            .contact-item { justify-content: center; }
+            .footer-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .footer-col h3 {
+                border-bottom: none;
+                margin-top: 20px;
+            }
+            /* Reset Contact Items to work with mobile alignment below */
+            .contact-item {
+                justify-content: center;
+            }
+            .main-about video {
+                width: 95%;
+            }
         }
+
         @media (max-width: 600px) {
-            .formBx { grid-template-columns: 1fr; }
-            .inputbx.full-width { grid-column: span 1; }
-            .modal-content-styled { padding: 30px 20px; width: 95%; max-height: 80vh;}
+            /* --- FIX FOR TITLE VIDEO OVERLAP & SPACING --- */
+            .main {
+                /* Add padding to push video below the fixed navbar */
+                padding-top: 80px; 
+                /* Remove fixed height so container shrinks to fit video exactly */
+                height: auto; 
+                background: #000;
+                display: block; 
+            }
+
+            .main video {
+                position: relative;
+                width: 100%;
+                height: auto;
+                object-fit: contain; /* Shows full video content including text */
+            }
+            /* ------------------------------------- */
+
+            /* --- FIX FOR CONTACT US ALIGNMENT --- */
+            .footer-container {
+               text-align: center;
+            }
+            
+            .contact-item {
+               display: flex;
+               justify-content: center; /* Keeps the block centered in screen */
+               align-items: center; /* Vertically aligns icon with single line text */
+               text-align: left; /* Keeps text left aligned relative to icon */
+               gap: 15px; /* Adds space between icon and text */
+               width: 100%;
+            }
+            
+            /* Special handling for address text to prevent ragged centering */
+            .contact-item p, .contact-item a {
+               text-align: left;
+               flex: 0 1 auto; /* Allows text to wrap naturally */
+               max-width: 80%; /* Prevents text from hitting edges */
+            }
+            
+            /* Align icon to top for multi-line address */
+            .contact-item:first-of-type { 
+               align-items: flex-start;
+            }
+            
+            .contact-item .icon {
+               margin-right: 0; /* Reset margin since we use gap */
+               margin-top: 3px; /* visual tweak for address */
+            }
+            /* ------------------------------------- */
+
+            .Aboutt {
+                padding: 40px 15px;
+            }
+            .main-about {
+                margin-top: 60px;
+            }
+            .main-about video {
+                width: 100%; 
+                border-radius: 8px;
+            }
+            h1, .about-heading {
+                font-size: 28px; 
+            }
+            .formBx {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .inputbx.full-width {
+                grid-column: span 1;
+            }
+            .modal-content-styled {
+                padding: 30px 20px;
+                width: 100%;
+                height: auto;
+                max-height: 85vh;
+            }
+            .write-us-btn {
+                width: 100%;
+            }
         }
       `}</style>
 
-      <div className='scroll-watcher'></div>
-
-
       <div className='main'>
         <video
-          src={titlevedio} autoPlay loop muted playsInline
+          src={titlevedio}
+          autoPlay
+          loop
+          muted
+          playsInline
           disablePictureInPicture={true}
           controls={false}
           style={{ pointerEvents: 'none' }}
         />
       </div>
 
-
       <div className='About'>
-        {/* ... (Content sections - kept same as provided) ... */}
         <div className='Aboutt'>
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='aboutsec'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='aboutsec'>
             <h2 className='about-heading'>ABOUT <span>SIST ACM SIGAI</span></h2>
             <p className='about-paragraph'>
               {adminSettings?.about}
             </p>
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='main-about'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='main-about'>
             <video
-              src={videoB} autoPlay loop controls={false} muted playsInline
+              src={videoB}
+              autoPlay
+              loop
+              controls={false}
+              muted
+              playsInline
               disablePictureInPicture={true}
               style={{ pointerEvents: 'none' }}
             />
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.4)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.5 }} className='mission'>
+          <m.div variants={fadeIn("up", 0.4)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='mission'>
             <h1><span>OUR</span> MISSION</h1>
             <p className='mission-paragraph'>
               {adminSettings?.mission}
             </p>
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='image-container'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='image-container'>
             <img src={ne} alt='LOGO REVEAL' loading="lazy" />
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='vision'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='vision'>
             <h1><span>OUR</span> VISION</h1>
             <p className='mission-paragraph'>
               {adminSettings?.vision}
             </p>
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" exit="exit" viewport={{ once: false, amount: 0.7 }} className='image-container'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" exit="exit" viewport={{ once: false, amount: 0.3 }} className='image-container'>
             <img src={sat} alt='SIST ACM SIGAI' loading="lazy" />
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='ideology'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='ideology'>
             <h1><span>OUR</span> IDEOLOGY</h1>
             <p className='mission-paragraph'>
               {adminSettings?.ideology}
             </p>
           </m.div>
 
-          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.7 }} className='image-container'>
+          <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='image-container'>
             <img src={grp} alt='OUR CORE UNIT' loading="lazy" />
           </m.div>
         </div>
       </div>
 
-      {/* --- FOOTER --- */}
       <footer className="main-footer">
         <div className="footer-container">
           <div className="footer-col">
@@ -568,7 +685,7 @@ const Home: React.FC = () => {
             </div>
             <div className="contact-item">
               <span className="icon"><FaEnvelope /></span>
-              <a href={`mailto:${adminSettings?.contact.email}`}>
+              <a href={`mailto:${adminSettings?.contact.email}`} style={{ wordBreak: 'break-all' }}>
                 {adminSettings?.contact.email}
               </a>
             </div>
@@ -605,7 +722,7 @@ const Home: React.FC = () => {
 
           <div className="footer-col footer-map">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.5412320274245!2d80.22350167642874!3d12.87288088743351!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a525b8c90befe2b%3A0x170ab8b5b21bb530!2sSathyabama%20Institute%20of%20Science%20and%20Technology!5e0!3m2!1sen!2sin!4v1710506289648!5m2!1sen!2sin"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3889.5412320274245!2d80.22350177642874!3d12.87288078743351!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a525b8c90befe2b%3A0x170ab8b5b21bb530!2sSathyabama%20Institute%20of%20Science%20and%20Technology!5e0!3m2!1sen!2sin!4v1710506289648!5m2!1sen!2sin"
               title="Sathyabama Location"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -626,7 +743,6 @@ const Home: React.FC = () => {
         </div>
       </footer>
 
-      {/* --- ANIMATIC WIDER MODAL --- */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="modal-overlay">
@@ -647,7 +763,6 @@ const Home: React.FC = () => {
 
               <form className="form" onSubmit={submitForm} style={{ position: 'relative', zIndex: 1 }}>
                 <div className='formBx'>
-                  {/* First Name & Last Name Side by Side */}
                   <div className='inputbx'>
                     <span>First Name</span>
                     <input
@@ -667,7 +782,6 @@ const Home: React.FC = () => {
                     />
                   </div>
 
-                  {/* Email & Mobile Side by Side */}
                   <div className='inputbx'>
                     <span>Email</span>
                     <input
@@ -690,7 +804,6 @@ const Home: React.FC = () => {
                     />
                   </div>
 
-                  {/* Message - Full Width */}
                   <div className='inputbx full-width'>
                     <span>Message</span>
                     <textarea
@@ -700,7 +813,6 @@ const Home: React.FC = () => {
                     ></textarea>
                   </div>
 
-                  {/* Submit - Full Width */}
                   <div className='inputbx full-width'>
                     <button
                       type='submit'

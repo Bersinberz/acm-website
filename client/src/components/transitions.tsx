@@ -14,7 +14,7 @@ export const fadeIn = (direction: string, delay: number): Variants => {
       y: 0,
       x: 0,
       transition: {
-        type: 'tween' as const, // Add 'as const' to narrow the type
+        type: 'tween' as const,
         duration: 0.5,
         delay: delay,
         ease: [0.25, 0.25, 0.25, 0.75],
