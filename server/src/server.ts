@@ -11,6 +11,7 @@ import adminSettingsRoutes from "./Routes/adminSettingsRoutes";
 import homeRoutes from "./Routes/homeRoutes"
 import dashboardRoutes from "./Routes/dashboardRoutes";
 import aboutRoutes from "./Routes/aboutRoute"
+import joinusRoutes from "./Routes/joinusRoute"
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use("/api/admin/settings", adminSettingsRoutes);
 // Website API Routes
 app.use("/api/home", homeRoutes)
 app.use("/api/about", aboutRoutes)
+app.use("/api/joinus", joinusRoutes)
 
 // Root endpoint check
 app.get("/", (_, res) => {

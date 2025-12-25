@@ -8,6 +8,7 @@ export interface Member {
   batch: string;
   imageUrl: string;
   social?: {
+    twitter: any;
     linkedin?: string;
     instagram?: string;
     facebook?: string;

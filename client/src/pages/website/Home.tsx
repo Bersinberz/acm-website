@@ -24,7 +24,7 @@ import CopyrightFooter from '../../components/Footer';
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusVisible, setStatusVisible] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error">("success");
@@ -41,6 +41,8 @@ const Home: React.FC = () => {
         setAdminSettings(data);
       } catch (err) {
         console.error("Failed to load admin settings", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -110,15 +112,16 @@ const Home: React.FC = () => {
       />
 
       <style>{`
-        /* --- GLOBAL RESETS --- */
-        * {
-            box-sizing: border-box;
+        :root {
+            --primary-blue: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.6);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
+        /* --- GLOBAL RESETS --- */
+        * { box-sizing: border-box; }
         video::-webkit-media-controls { display: none !important; }
-        video::-webkit-media-controls-enclosure { display: none !important; }
-        video::-webkit-media-controls-picture-in-picture-button { display: none !important; }
-        video { -webkit-appearance: none; appearance: none; }
 
         @keyframes gradientShift {
           0% { background-position: 0 50%; }
@@ -129,483 +132,304 @@ const Home: React.FC = () => {
         /* --- LAYOUT CONTAINERS --- */
         .main {
             position: relative;
-            height: 100vh;
+            height: 100dvh;
             width: 100%;
+            min-height: 500px;
             overflow: hidden;
             background: #000; 
         }
 
-        /* Fullscreen Hero Video (Desktop Default) */
         .main video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Keeps fullscreen on desktop */
-            position: absolute;
-            top: 0; left: 0;
-            z-index: 0;
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center center;
+          z-index: 0;
         }
 
         .About {
-            position: relative;
-            z-index: 1;
-            background: inherit;
-            width: 100%;
-            overflow-x: hidden; 
+            position: relative; z-index: 1; background: inherit;
+            width: 100%; overflow-x: hidden; 
         }
 
         .Aboutt {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
+            width: 100%; max-width: 1200px; margin: 0 auto;
             padding: 60px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
         }
 
         /* --- SECTIONS & SPACING --- */
         .ideology, .vision, .mission, .main-about, .image-mission, .aboutsec, .image-container {
             margin-top: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; width: 100%;
         }
 
-        .main-about {
-            margin-top: 100px;
-            width: 100%;
-        }
+        .main-about { margin-top: 100px; width: 100%; }
 
-        /* Responsive Video Container for Content */
-        .main-about video {
-            position: relative;
-            width: 80%;
-            max-width: 900px;
-            height: auto;
-            aspect-ratio: 16/9;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            object-fit: cover;
-        }
-
-        /* --- TYPOGRAPHY --- */
-        h1, .about-heading {
-            color: white;
-            font-size: clamp(28px, 5vw, 50px);
-            margin-bottom: 20px;
+        /* --- TECH BADGES (SECTION HEADERS) --- */
+        .tech-badge {
+            display: inline-block;
+            padding: 12px 45px;
+            margin-bottom: 30px;
+            color: #fff;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 700;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            line-height: 1.2;
-            text-align: center;
+            
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.15), inset 0 0 10px rgba(59, 130, 246, 0.05);
+            
+            position: relative;
+            transition: all 0.3s ease;
         }
 
-        h1 span, .about-heading span {
-            color: #0099ff;
+        .tech-badge:hover {
+            border-color: #fff;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+            transform: scale(1.05);
         }
+
+        .tech-badge::before, .tech-badge::after {
+            content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+            width: 6px; height: 6px; background: var(--primary-blue); border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-blue);
+        }
+        .tech-badge::before { left: 20px; }
+        .tech-badge::after { right: 20px; }
+
+        .tech-highlight { color: var(--primary-blue); }
 
         p.mission-paragraph, p.about-paragraph {
-            color: #e0e0e0;
-            font-size: clamp(16px, 2vw, 20px);
-            font-weight: 300;
-            font-family: "Roboto", sans-serif;
-            line-height: 1.6;
-            text-align: justify;
-            max-width: 900px;
-            padding: 0 10px;
+            color: #e0e0e0; font-size: clamp(16px, 2vw, 20px); font-weight: 300;
+            font-family: "Roboto", sans-serif; line-height: 1.6; text-align: justify;
+            max-width: 900px; padding: 0 10px;
         }
 
-        /* --- IMAGES --- */
-.image-container img {
-    width: 80%;
-    max-width: 900px;
-    height: auto;
-    display: block;
-    margin: 0 auto;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-        
-        .Aboutt img {
-             max-width: 100%;
-             height: auto;
+        .image-container img {
+            width: 80%; max-width: 900px; height: auto; display: block; margin: 0 auto;
+            border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .main-about video {
+            position: relative; width: 80%; max-width: 900px; height: auto;
+            aspect-ratio: 16/9; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            object-fit: cover; border: 1px solid rgba(255,255,255,0.1);
         }
 
         /* --- FOOTER --- */
         .main-footer {
             background: linear-gradient(to right, #000428, #004e92);
-            color: #ffffff;
-            padding: 60px 0 0 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            width: 100%;
-            margin-top: 50px;
+            color: #ffffff; padding: 60px 0 0 0; font-family: 'Segoe UI', sans-serif;
+            width: 100%; margin-top: 50px;
         }
-
         .footer-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px 40px 20px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 40px;
-            align-items: start;
+            max-width: 1400px; margin: 0 auto; padding: 0 20px 40px 20px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; align-items: start;
         }
-
         .footer-col h3 {
-            color: #fff;
-            font-size: 1.3rem;
-            margin-bottom: 25px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #5CA0F2;
-            display: inline-block;
-            padding-bottom: 5px;
+            color: #fff; font-size: 1.3rem; margin-bottom: 25px; text-transform: uppercase;
+            letter-spacing: 1px; border-bottom: 2px solid #5CA0F2; display: inline-block; padding-bottom: 5px;
         }
-
         .contact-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            font-size: 1rem;
-            color: #e0e0e0;
+            display: flex; align-items: flex-start; margin-bottom: 20px; font-size: 1rem; color: #e0e0e0;
         }
-
         .contact-item .icon {
-            font-size: 1.2rem;
-            margin-right: 15px;
-            color: #5CA0F2;
-            min-width: 20px;
+            font-size: 1.2rem; margin-right: 15px; color: #5CA0F2; min-width: 20px;
         }
-
         .contact-item p a, .contact-item > a {
-            color: #e0e0e0;
-            text-decoration: none;
-            transition: color 0.3s;
-            font-weight: 500;
-            word-break: break-word;
+            color: #e0e0e0; text-decoration: none; transition: color 0.3s; font-weight: 500; word-break: break-word;
         }
-
-        .contact-item p a:hover, .contact-item > a:hover {
-            color: #5CA0F2;
-        }
-
-        .footer-center {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
+        .contact-item p a:hover, .contact-item > a:hover { color: #5CA0F2; }
+        .footer-center { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        
+        /* FOOTER BRAND (Enhanced with Hero Style) */
         .footer-brand {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-size: 2.5rem; font-weight: 900; 
+            margin-bottom: 15px; letter-spacing: 1px;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
         }
 
         .write-us-btn {
-            background: linear-gradient(45deg, #5CA0F2, #3c7ec9);
-            color: #fff;
-            border: none;
-            padding: 12px 35px;
-            font-size: 1rem;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-            margin-bottom: 30px;
-            font-weight: 700;
-            white-space: nowrap;
+            background: transparent; color: #fff; border: 1px solid #5CA0F2;
+            padding: 12px 35px; font-size: 1rem; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(92, 160, 242, 0.2); transition: all 0.3s ease;
+            margin-bottom: 30px; font-weight: 700; white-space: nowrap;
         }
-
         .write-us-btn:hover {
-            box-shadow: 0 6px 20px rgba(92, 160, 242, 0.5);
-            background: linear-gradient(45deg, #4b92e8, #2a6cb7);
+            box-shadow: 0 0 25px rgba(92, 160, 242, 0.6); background: #5CA0F2; color: #000;
         }
+        .social-icons { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+.social-icon {
+    width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; text-decoration: none;
+    font-size: 1.4rem; color: #e0e0e0; transition: all 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.05); /* Added subtle border */
+}
 
-        .social-icons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+.social-icon.twitter:hover { 
+    background: #1DA1F2; 
+    color: #fff; 
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(29, 161, 242, 0.5);
+    border-color: #1DA1F2;
+}
 
-        .social-icon {
-            width: 45px;
-            height: 45px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 1.4rem;
-            color: #e0e0e0;
-            transition: all 0.3s ease;
-        }
+/* Instagram (Gradient) */
+.social-icon.instagram:hover { 
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); 
+    background-origin: border-box; /* Ensures gradient starts at the border edge */
+    background-clip: border-box;   /* Ensures gradient fills the border area */
+    color: #fff; 
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(214, 36, 159, 0.5);
+    border-color: transparent; /* Makes the border invisible so the gradient shows through */
+}
 
-        .social-icon:hover { transform: translateY(-3px); }
-        .social-icon.twitter:hover { color: #1DA1F2; background: rgba(29, 161, 242, 0.1); }
-        .social-icon.instagram:hover { color: #E1306C; background: rgba(225, 48, 108, 0.1); }
-        .social-icon.linkedin:hover { color: #0077B5; background: rgba(0, 119, 181, 0.1); }
-
+/* LinkedIn (Corporate Blue) */
+.social-icon.linkedin:hover { 
+    background: #0A66C2; 
+    color: #fff; 
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(10, 102, 194, 0.5);
+    border-color: #0A66C2;
+}
+        .social-icon:hover { transform: translateY(-3px); background: #5CA0F2; color: #fff; }
         .footer-map iframe {
-            width: 100%;
-            height: 250px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.2);
+            width: 100%; height: 250px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-
         .cpoy-cont {
             background: linear-gradient(45deg, #F5F7F6, #5CA0F2);
-            background-size: 300% 300%;
-            animation: gradientShift 12s ease-in-out infinite;
-            padding: 20px;
-            text-align: center;
-            width: 100%;
+            background-size: 300% 300%; animation: gradientShift 12s ease-in-out infinite;
+            padding: 20px; text-align: center; width: 100%;
         }
-
         .Copyrights { color: #000; }
         .Copyrights h2 { font-size: 1rem; margin-bottom: 10px; font-weight: 800; }
-        .Copyrights p {
-            font-size: 0.85rem;
-            margin: 5px 0;
-            font-weight: 600;
-            line-height: 1.6;
-        }
+        .Copyrights p { font-size: 0.85rem; margin: 5px 0; font-weight: 600; line-height: 1.6; }
 
         /* --- MODAL --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
             display: flex; justify-content: center; align-items: center;
-            z-index: 10000;
-            padding: 20px;
+            z-index: 10000; padding: 20px;
         }
 
         .modal-content-styled {
-            background: linear-gradient(135deg, #000428, #004e92);
-            padding: 40px;
-            width: 100%;
-            max-width: 800px;
-            border-radius: 20px;
+            background: rgba(10, 15, 30, 0.7);
+            padding: 40px; width: 100%; max-width: 800px; border-radius: 20px;
             position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            max-height: 90vh;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-decor {
-            position: absolute;
-            top: -50px; left: -50px;
-            width: 150px; height: 150px;
-            background: radial-gradient(circle, rgba(92,160,242,0.4) 0%, rgba(0,0,0,0) 70%);
-            border-radius: 50%;
-            opacity: 0.5;
-            z-index: 0;
-            pointer-events: none;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.15), inset 0 0 20px rgba(59, 130, 246, 0.05);
+            color: #fff; max-height: 90vh; overflow-y: auto;
+            display: flex; flex-direction: column;
         }
 
         .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            width: 35px; height: 35px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 1rem;
-            cursor: pointer;
-            color: #fff;
+            position: absolute; top: 20px; right: 20px;
+            background: transparent; width: 40px; height: 40px;
+            border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.2rem; cursor: pointer; color: #fff;
             display: flex; align-items: center; justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 10;
+            transition: all 0.3s ease; z-index: 10;
+        }
+        .close-modal:hover {
+            border-color: #ff4d4d; color: #ff4d4d; transform: rotate(90deg);
+            box-shadow: 0 0 15px rgba(255, 77, 77, 0.4);
         }
 
-        .close-modal:hover { background: #ff4d4d; border-color: #ff4d4d; }
-
-        .formBx {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            width: 100%;
+        .modal-title {
+            text-align: center; margin-bottom: 40px;
+            font-size: 2rem; font-weight: 800; letter-spacing: 2px;
+            color: #fff; text-transform: uppercase;
         }
 
+        /* GRADIENT TEXT CLASS (Used for Modal & Footer) */
+        .hero-highlight {
+            background: linear-gradient(135deg, #fff 0%, var(--primary-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px var(--primary-glow));
+        }
+
+        .formBx { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; width: 100%; }
         .inputbx.full-width { grid-column: span 2; }
-
-        .inputbx {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-
+        .inputbx { display: flex; flex-direction: column; width: 100%; }
+        
         .inputbx span {
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #e0e0e0;
+            margin-bottom: 8px; font-weight: 600; font-size: 0.9rem;
+            color: var(--primary-blue); text-transform: uppercase; letter-spacing: 1px;
         }
 
         .inputbx input, .inputbx textarea {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-            font-size: 1rem;
-            color: #fff;
-            background: rgba(255,255,255,0.05);
-            border-radius: 4px;
+            width: 100%; padding: 15px;
+            border: none; border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            font-size: 1rem; color: #fff;
+            background: rgba(255,255,255,0.03); border-radius: 4px 4px 0 0;
+            transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
         }
 
         .inputbx input:focus, .inputbx textarea:focus {
-            border-bottom: 2px solid #5CA0F2;
-            background: rgba(255,255,255,0.1);
+            border-bottom: 2px solid var(--primary-blue);
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.2);
+            outline: none;
         }
 
         .submit-btn {
-            background: #5CA0F2;
-            color: #000428;
-            padding: 15px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
+            background: var(--primary-blue); color: #fff;
+            padding: 18px; border: none; border-radius: 8px;
+            font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
+            cursor: pointer; width: 100%; margin-top: 15px;
             display: flex; justify-content: center; align-items: center; gap: 10px;
+            transition: all 0.3s; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
-
+        .submit-btn:hover {
+            background: #2563eb; box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+        }
         .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        /* --- MEDIA QUERIES --- */
-
-        @media (max-width: 1024px) {
-            .footer-container {
-                gap: 20px;
-            }
-        }
-
+        /* --- RESPONSIVE --- */
         @media (max-width: 900px) {
-            .footer-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            .footer-col h3 {
-                border-bottom: none;
-                margin-top: 20px;
-            }
-            .image-container img {
-              width: 95%;
-            }
-            /* Reset Contact Items to work with mobile alignment below */
-            .contact-item {
-                justify-content: center;
-            }
-            .main-about video {
-                width: 95%;
-            }
+            .tech-badge { font-size: 1.2rem; padding: 10px 30px; }
+            .footer-container { grid-template-columns: 1fr; text-align: center; }
+            .footer-col h3 { border-bottom: none; margin-top: 20px; }
+            .contact-item { justify-content: center; }
+            .main-about video { width: 95%; }
+            .formBx { grid-template-columns: 1fr; }
+            .inputbx.full-width { grid-column: span 1; }
         }
 
-        @media (max-width: 600px) {
-            /* --- FIX FOR TITLE VIDEO OVERLAP & SPACING --- */
+        @media (max-width: 768px) {
             .main {
-                /* Add padding to push video below the fixed navbar */
-                padding-top: 80px; 
-                /* Remove fixed height so container shrinks to fit video exactly */
-                height: auto; 
-                background: #000;
-                display: block; 
+              height: 70dvh;
+              min-height: 420px;
             }
 
             .main video {
-                position: relative;
-                width: 100%;
-                height: auto;
-                object-fit: contain; /* Shows full video content including text */
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              object-position: center top; /* prevents top cropping */
             }
-            /* ------------------------------------- */
+          }
 
-            /* --- FIX FOR CONTACT US ALIGNMENT --- */
-            .footer-container {
-               text-align: center;
-            }
-            
-            .contact-item {
-               display: flex;
-               justify-content: center; /* Keeps the block centered in screen */
-               align-items: center; /* Vertically aligns icon with single line text */
-               text-align: left; /* Keeps text left aligned relative to icon */
-               gap: 15px; /* Adds space between icon and text */
-               width: 100%;
-            }
-            
-            /* Special handling for address text to prevent ragged centering */
-            .contact-item p, .contact-item a {
-               text-align: left;
-               flex: 0 1 auto; /* Allows text to wrap naturally */
-               max-width: 80%; /* Prevents text from hitting edges */
-            }
-            
-            /* Align icon to top for multi-line address */
-            .contact-item:first-of-type { 
-               align-items: flex-start;
-            }
-            
-            .contact-item .icon {
-               margin-right: 0; /* Reset margin since we use gap */
-               margin-top: 3px; /* visual tweak for address */
-            }
-            /* ------------------------------------- */
-
-            .Aboutt {
-                padding: 40px 15px;
-            }
-            .main-about {
-                margin-top: 60px;
-            }
-            .main-about video {
-                width: 100%; 
-                border-radius: 8px;
-            }
-            h1, .about-heading {
-                font-size: 28px; 
-            }
-            .formBx {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            .inputbx.full-width {
-                grid-column: span 1;
-            }
-            .modal-content-styled {
-                padding: 30px 20px;
-                width: 100%;
-                height: auto;
-                max-height: 85vh;
-            }
-            .write-us-btn {
-                width: 100%;
-            }
-        }
       `}</style>
 
+      {/* --- HERO SECTION (NO TITLE OVERLAY) --- */}
       <div className='main'>
         <video
           src={titlevedio}
-          autoPlay
-          loop
-          muted
-          playsInline
+          autoPlay loop muted playsInline
           disablePictureInPicture={true}
           controls={false}
           style={{ pointerEvents: 'none' }}
@@ -614,8 +438,9 @@ const Home: React.FC = () => {
 
       <div className='About'>
         <div className='Aboutt'>
+          
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='aboutsec'>
-            <h2 className='about-heading'>ABOUT <span>SIST ACM SIGAI</span></h2>
+            <div className="tech-badge">About <span className="tech-highlight">{adminSettings?.orgName || "SIST ACM SIGAI"}</span></div>
             <p className='about-paragraph'>
               {adminSettings?.about}
             </p>
@@ -624,18 +449,14 @@ const Home: React.FC = () => {
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='main-about'>
             <video
               src={videoB}
-              autoPlay
-              loop
-              controls={false}
-              muted
-              playsInline
+              autoPlay loop controls={false} muted playsInline
               disablePictureInPicture={true}
               style={{ pointerEvents: 'none' }}
             />
           </m.div>
 
           <m.div variants={fadeIn("up", 0.4)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='mission'>
-            <h1><span>OUR</span> MISSION</h1>
+            <div className="tech-badge"><span className="tech-highlight">Our</span> Mission</div>
             <p className='mission-paragraph'>
               {adminSettings?.mission}
             </p>
@@ -646,7 +467,7 @@ const Home: React.FC = () => {
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='vision'>
-            <h1><span>OUR</span> VISION</h1>
+            <div className="tech-badge"><span className="tech-highlight">Our</span> Vision</div>
             <p className='mission-paragraph'>
               {adminSettings?.vision}
             </p>
@@ -657,7 +478,7 @@ const Home: React.FC = () => {
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='ideology'>
-            <h1><span>OUR</span> IDEOLOGY</h1>
+            <div className="tech-badge"><span className="tech-highlight">Our</span> Ideology</div>
             <p className='mission-paragraph'>
               {adminSettings?.ideology}
             </p>
@@ -702,9 +523,13 @@ const Home: React.FC = () => {
           </div>
 
           <div className="footer-col footer-center">
+            {/* Enhanced Footer Brand Title */}
             <div className="footer-brand">
-              {adminSettings?.orgName}
+              <span className="hero-highlight">
+                {adminSettings?.orgName || "SIST ACM SIGAI"}
+              </span>
             </div>
+            
             <p className="cta-text">Have questions or want to collaborate?</p>
 
             <button className="write-us-btn" onClick={toggleModal}>
@@ -738,6 +563,7 @@ const Home: React.FC = () => {
         <CopyrightFooter />
       </footer>
 
+      {/* --- ENHANCED MODAL --- */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="modal-overlay">
@@ -748,63 +574,51 @@ const Home: React.FC = () => {
               exit={{ opacity: 0, scale: 0.8, y: 50 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
             >
-              <div className="modal-decor"></div>
-
               <button className="close-modal" onClick={toggleModal}><FaTimes /></button>
 
-              <h3 style={{ textAlign: 'center', marginBottom: '30px', color: '#fff', fontSize: '1.8rem', position: 'relative', zIndex: 1 }}>
-                Send a Message
+              <h3 className="modal-title">
+                Establish <span className="hero-highlight">Connection</span>
               </h3>
 
-              <form className="form" onSubmit={submitForm} style={{ position: 'relative', zIndex: 1 }}>
+              <form className="form" onSubmit={submitForm}>
                 <div className='formBx'>
                   <div className='inputbx'>
                     <span>First Name</span>
                     <input
-                      type='text'
-                      name='Firstname'
-                      required
-                      disabled={isSubmitting}
+                      type='text' name='Firstname'
+                      required disabled={isSubmitting}
                     />
                   </div>
                   <div className='inputbx'>
                     <span>Last Name</span>
                     <input
-                      type='text'
-                      name='Lastname'
-                      required
-                      disabled={isSubmitting}
+                      type='text' name='Lastname'
+                      required disabled={isSubmitting}
                     />
                   </div>
 
                   <div className='inputbx'>
-                    <span>Email</span>
+                    <span>Email Address</span>
                     <input
-                      type='email'
-                      name='Email'
-                      required
-                      disabled={isSubmitting}
+                      type='email' name='Email'
+                      required disabled={isSubmitting}
                     />
                   </div>
                   <div className='inputbx'>
-                    <span>Mobile</span>
+                    <span>Mobile Number</span>
                     <input
-                      type='tel'
-                      name='Mobile'
-                      pattern="[0-9]{10}"
-                      inputMode="numeric"
+                      type='tel' name='Mobile'
+                      pattern="[0-9]{10}" inputMode="numeric"
                       title="Enter a valid 10-digit mobile number"
-                      required
-                      disabled={isSubmitting}
+                      required disabled={isSubmitting}
                     />
                   </div>
 
                   <div className='inputbx full-width'>
-                    <span>Message</span>
+                    <span>Your Message</span>
                     <textarea
-                      name='Message'
-                      required
-                      disabled={isSubmitting}
+                      name='Message' rows={4}
+                      required disabled={isSubmitting}
                     ></textarea>
                   </div>
 
@@ -814,7 +628,7 @@ const Home: React.FC = () => {
                       className="submit-btn"
                       disabled={isSubmitting}
                     >
-                      SEND MESSAGE <FaPaperPlane />
+                      {isSubmitting ? "TRANSMITTING..." : "TRANSMIT DATA"} <FaPaperPlane />
                     </button>
                   </div>
                 </div>

@@ -11,14 +11,13 @@ body {
   justify-content: center;
   height: 100%;
   -ms-overflow-style: none;
-    background: linear-gradient(
-    -45deg, 
-    #000000, 
-    #171242, 
-    #0b1b3a, 
-    #0f0524,
-    #000000
-  );
+  background: linear-gradient(-45deg,
+      #000000,
+      #171242,
+      #0b1b3a,
+      #0f0524,
+      #000000
+    );
   font-family: "Noto Sans JP", sans-serif;
   overflow-x: hidden;
 }
@@ -41,40 +40,47 @@ body {
   background: linear-gradient(180deg, #2a2375, #60a5fa);
 }
 
-.containerapp {
-  display: flex;
-  flex-direction: column;
-  min-height: 120vh;
-  width: 100%;
-}
-
 .main-contentapp {
   flex: 1;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-content: center;
-  
-  background: linear-gradient(
-    -45deg, 
-    #000000, 
-    #171242, 
-    #0b1b3a, 
-    #0f0524,
-    #000000
-  );
-  background-size: 400% 400%;
-  animation: deepSpaceGradient 15s ease infinite;
+
+  /* NEW: Spotlight Configuration */
+  /* We place the brightest color in the center and fade to black */
+  background: radial-gradient(
+      circle,
+      #171242 0%,    /* Brightest core */
+      #0b1b3a 30%,   /* Mid-tone glow */
+      #0f0524 60%,   /* Deep shadow */
+      #000000 100%   /* Void */
+    );
+
+  /* We make the background much larger than the screen */
+  /* This allows the 'center' of the radial gradient to move around */
+  background-size: 180% 180%;
+  background-attachment: fixed;
+  min-height: 100vh;
+
+  /* Animation moves the background position back and forth */
+  animation: nebulaDrift 15s ease-in-out infinite alternate;
 }
 
-@keyframes deepSpaceGradient {
+/* NEW: Animation Keyframes */
+@keyframes nebulaDrift {
   0% {
-    background-position: 0% 50%;
+    /* Focus is at the Top-Left */
+    background-position: 0% 0%;
   }
+
   50% {
-    background-position: 100% 50%;
+    /* Focus drifts to the Bottom-Right */
+    background-position: 100% 100%;
   }
+  
   100% {
-    background-position: 0% 50%;
+    /* Focus moves to the Top-Right (creates a triangular path) */
+    background-position: 100% 0%;
   }
 }

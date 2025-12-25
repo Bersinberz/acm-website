@@ -128,6 +128,7 @@ const Members = () => {
                 const start = Date.now();
 
                 const data = await getMembers();
+                console.log(data)
 
                 // Minimum loader time (ms)
                 const MIN_LOADING_TIME = 400;
@@ -141,17 +142,18 @@ const Members = () => {
 
                 setMembers(
                     data.map((m: any) => ({
+                        _id: m._id,
                         name: m.name,
                         designation: m.designation,
                         batch: m.batch,
                         profilePic: m.imageUrl,
                         social: {
-                            linkedin: m.linkedin,
-                            instagram: m.instagram,
-                            facebook: m.facebook,
+                            linkedin: m.social?.linkedin?.trim() || undefined,
+                            instagram: m.social?.instagram?.trim() || undefined,
+                            facebook: m.social?.facebook?.trim() || undefined,
                         },
-                        _id: m._id,
                     }))
+                    
                 );
             } catch (error) {
                 showToast("Failed to load members", "error");
@@ -575,24 +577,49 @@ const Members = () => {
                                         <div className="d-flex justify-content-between align-items-center flex-wrap gap-4">
                                             {/* Social Links */}
                                             <div className="d-flex gap-3">
-                                                {member.social.linkedin && (
-                                                    <a href={member.social.linkedin} target="_blank" rel="noreferrer" className="social-btn linkedin" title="LinkedIn">
+                                                {member.social.linkedin?.trim() && (
+                                                    <a
+                                                        href={member.social.linkedin}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="social-btn linkedin"
+                                                        title="LinkedIn"
+                                                    >
                                                         <i className="bi bi-linkedin"></i>
                                                     </a>
                                                 )}
-                                                {member.social.instagram && (
-                                                    <a href={member.social.instagram} target="_blank" rel="noreferrer" className="social-btn instagram" title="Instagram">
+
+                                                {member.social.instagram?.trim() && (
+                                                    <a
+                                                        href={member.social.instagram}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="social-btn instagram"
+                                                        title="Instagram"
+                                                    >
                                                         <i className="bi bi-instagram"></i>
                                                     </a>
                                                 )}
-                                                {member.social.facebook && (
-                                                    <a href={member.social.facebook} target="_blank" rel="noreferrer" className="social-btn facebook" title="Facebook">
+
+                                                {member.social.facebook?.trim() && (
+                                                    <a
+                                                        href={member.social.facebook}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="social-btn facebook"
+                                                        title="Facebook"
+                                                    >
                                                         <i className="bi bi-facebook"></i>
                                                     </a>
                                                 )}
-                                                {!member.social.linkedin && !member.social.instagram && !member.social.facebook && (
-                                                    <span className="text-secondary small fst-italic mt-2">No social links linked.</span>
-                                                )}
+
+                                                {!member.social.linkedin?.trim() &&
+                                                    !member.social.instagram?.trim() &&
+                                                    !member.social.facebook?.trim() && (
+                                                        <span className="text-secondary small fst-italic mt-2">
+                                                            No social links linked.
+                                                        </span>
+                                                    )}
                                             </div>
 
                                             {/* Actions */}

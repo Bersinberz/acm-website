@@ -15,7 +15,7 @@ export interface RecruitmentPayload {
 // Get all recruitments
 export const getAllRecruitments = async () => {
   const res = await axiosInstance.get("/admin/recruitments/getall");
-  return res.data; // { recruitments: [...] }
+  return res.data;
 };
 
 // Create recruitment
