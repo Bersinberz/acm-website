@@ -440,7 +440,7 @@ const Home: React.FC = () => {
         <div className='Aboutt'>
           
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='aboutsec'>
-            <div className="tech-badge">About <span className="tech-highlight">{adminSettings?.orgName || "SIST ACM SIGAI"}</span></div>
+            <div className="tech-badge"><span className="tech-highlight">About </span>{adminSettings?.orgName || "SIST ACM SIGAI"}</div>
             <p className='about-paragraph'>
               {adminSettings?.about}
             </p>

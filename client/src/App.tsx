@@ -15,6 +15,7 @@ import Home from "./pages/website/Home";
 import About from "./pages/website/Aboutus";
 import Membership from "./pages/website/Membership";
 import Ourroots from "./pages/website/Ourroots";
+import JoinUs from "./pages/website/Joinus";
 
 /* ---------------- COMPONENTS ---------------- */
 import Nav from "./components/Navbar";
@@ -23,8 +24,11 @@ import LogoLoading from "./components/logoLoader";
 
 /* ---------------- STYLES ---------------- */
 import "./App.css";
-import JoinUs from "./pages/website/Joinus";
-
+import Archives from "./pages/website/archives";
+import Inaugural from "./pages/website/Archives/inaugural";
+import Azure from "./pages/website/Archives/azure";
+import Genai from "./pages/website/Archives/genAi";
+import Digiart from "./pages/website/Archives/digitalart";
 
 function App() {
   const location = useLocation();
@@ -50,7 +54,7 @@ function App() {
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
-  /* ---------------- ADMIN ROUTES ---------------- */
+  /* ---------------- ADMIN ROUTES (NO NEBULA) ---------------- */
   if (isAdminRoute) {
     return (
       <Routes location={location} key={location.pathname}>
@@ -64,9 +68,9 @@ function App() {
     );
   }
 
-  /* ---------------- WEBSITE ROUTES ---------------- */
+  /* ---------------- WEBSITE ROUTES (WITH NEBULA) ---------------- */
   return (
-    <div className="containerapp">
+    <>
       <Nav />
 
       <AnimatePresence mode="wait">
@@ -85,13 +89,18 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/membership" element={<Membership />} />
+              <Route path="/archives" element={<Archives />} />
+              <Route path="/archives/inaugural" element={<Inaugural />} />
+              <Route path="/archives/azure" element={<Azure />} />
+              <Route path="/archives/genai" element={<Genai />} />
+              <Route path="/archives/digiart" element={<Digiart />} />
               <Route path="/our-roots" element={<Ourroots />} />
               <Route path="/join-us" element={<JoinUs />} />
             </Routes>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
 

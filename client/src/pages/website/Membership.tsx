@@ -1,5 +1,6 @@
-import { motion as m, type Variants } from "framer-motion";
+import { motion as m } from "framer-motion";
 import { FaLaptop, FaExclamationTriangle, FaIdCard, FaUserPlus, FaEnvelopeOpenText, FaSignInAlt, FaDownload } from "react-icons/fa";
+import { fadeIn } from "../../components/transitions";
 
 // --- Data: Steps Configuration ---
 const stepsData = [
@@ -68,33 +69,6 @@ const stepsData = [
     ]
   }
 ];
-
-// --- Animations ---
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 50, damping: 14 }
-  }
-};
-
-const alertVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  show: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.5, ease: "easeOut" }
-  }
-};
 
 // --- CSS Styles ---
 const styles = `
@@ -373,9 +347,9 @@ const Membership = () => {
         {/* --- Header Section --- */}
         <div className="membership-header">
           <m.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            variants={fadeIn("down", 0)}
+            initial="hidden"
+            animate="show"
           >
             <div className="device-badge">
               <FaLaptop /> Desktop Recommended
@@ -383,18 +357,19 @@ const Membership = () => {
           </m.div>
 
           <m.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className='main-title'
+            variants={fadeIn("up", 0)}
+            initial="hidden"
+            animate="show"
+            className="main-title"
+            viewport={{ once: false, amount: 0.7 }}
           >
             ACM <span className="highlight-text">Membership Guide</span>
           </m.h1>
 
           <m.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            variants={fadeIn("up", 0.25)}
+            initial="hidden"
+            animate="show"
             className="sub-title"
           >
             Follow this step-by-step roadmap to secure your membership and access your digital card.
@@ -404,7 +379,7 @@ const Membership = () => {
         {/* --- Alert Box --- */}
         <m.div
           className="alert-box"
-          variants={alertVariants}
+          variants={fadeIn("up", 0.35)}
           initial="hidden"
           animate="show"
         >
@@ -421,15 +396,14 @@ const Membership = () => {
         {/* --- Stacked Steps Container --- */}
         <m.div
           className="steps-container"
-          variants={containerVariants}
           initial="hidden"
           animate="show"
         >
-          {stepsData.map((step) => (
+          {stepsData.map((step, index) => (
             <m.div
               key={step.id}
               className="step-card"
-              variants={cardVariants}
+              variants={fadeIn("up", 0.15 + index * 0.1)}
             >
               {/* Left Column: Number & Icon */}
               <div className="card-left">
@@ -465,12 +439,20 @@ const Membership = () => {
         </m.div>
 
         {/* --- Footer --- */}
-        <footer className="support-footer">
+        <m.footer
+          className="support-footer"
+          variants={fadeIn("up", 0.4)}
+          initial="hidden"
+          animate="show"
+        >
           <p>Experiencing technical difficulties?</p>
-          <a href="mailto:acmindiahelp@hq.acm.org" className="support-link">
-            Contact ACM Help Desk &rarr;
+          <a
+            href="mailto:acmindiahelp@hq.acm.org"
+            className="support-link"
+          >
+            Contact ACM Help Desk →
           </a>
-        </footer>
+        </m.footer>
       </div>
     </>
   );

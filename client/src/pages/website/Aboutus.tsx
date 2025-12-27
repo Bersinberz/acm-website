@@ -8,6 +8,8 @@ import { FaInstagram, FaLinkedin, FaTwitter, FaFacebook } from "react-icons/fa";
 // --- LOCAL IMAGES (Only for non-member content) ---
 import images from '../../assets/acm-loader-logo.png'
 import { getMembers, type Member } from '../../services/website/aboutservice';
+import { FloatingOrb } from '../../components/StatusMessage';
+import { GlobalLoader } from '../../components/GlobalLoader';
 
 interface FrontendMember {
   id: string;
@@ -29,7 +31,9 @@ const About: React.FC<AboutProps> = () => {
   const [selectedYear, setSelectedYear] = useState<string>('2025-2026');
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [showMessage, setShowMessage] = useState(false);
+  const [messageText, setMessageText] = useState("");
+
 
   type SocialType = "instagram" | "linkedin" | "facebook";
 
@@ -43,12 +47,12 @@ const About: React.FC<AboutProps> = () => {
     const fetchMembers = async () => {
       try {
         setLoading(true);
-        setError(null);
         const data = await getMembers();
         setMembers(data);
       } catch (err) {
-        console.error('Error fetching members:', err);
-        setError('Failed to load team members. Please try again later.');
+        console.error("Error fetching members:", err);
+        setMessageText("Failed to load team members. Please try again later.");
+        setShowMessage(true);
       } finally {
         setLoading(false);
       }
@@ -164,90 +168,75 @@ const About: React.FC<AboutProps> = () => {
   };
 
   // --- REUSABLE CARD COMPONENT ---
-  const MemberCard = ({ member, isLarge = false }: { member: FrontendMember, isLarge?: boolean }) => {
+  const MemberCard = ({ member, isLarge = false }: { member: FrontendMember; isLarge?: boolean }) => {
     return (
-      <Tilt
-        id="tilt-card"
-        options={{ scale: 1.05, speed: 1000, max: 15 }}
-        style={{ transformStyle: "preserve-3d" }}
+      <m.div
+        variants={fadeIn("up", 0.15)}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: false, amount: 0.3 }}
+        style={{ willChange: "opacity, transform" }}
       >
-        <m.div
-          variants={fadeIn("up", 0.15)}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: false, amount: 0.6 }}
-          className={`member-card ${isLarge ? 'large' : ''}`}
+        <Tilt
+          id="tilt-card"
+          options={{ scale: 1.05, speed: 1000, max: 15 }}
+          style={{ transformStyle: "preserve-3d" }}
         >
-          <div className="card-img-wrapper">
-            <img
-              src={member.img}
-              alt={member.name}
-              onError={(e) => {
-                e.currentTarget.src = 'https://via.placeholder.com/280x380?text=No+Image';
-              }}
-            />
-          </div>
-          <div className="card-content">
-            <div className="text-box">
-              <h3>{member.name}</h3>
-              <span>{member.designation}</span>
-              {member.additional && <span className="additional">{member.additional}</span>}
+          <div className={`member-card ${isLarge ? "large" : ""}`}>
+            <div className="card-img-wrapper">
+              <img
+                src={member.img}
+                alt={member.name}
+                onError={(e) => {
+                  e.currentTarget.src = "https://via.placeholder.com/280x380?text=No+Image";
+                }}
+              />
             </div>
 
-            {/* SOCIAL SECTION */}
-            <div className="social-icons">
-              {member.social?.map((social, index) => (
-                <a
-                  key={index}
-                  href={social.link}
-                  className={`social-icon ${social.type}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {social.type === "instagram" && <FaInstagram />}
-                  {social.type === "linkedin" && <FaLinkedin />}
-                  {social.type === "twitter" && <FaTwitter />}
-                  {social.type === "facebook" && <FaFacebook />}
-                </a>
-              ))}
+            <div className="card-content">
+              <div className="text-box">
+                <h3>{member.name}</h3>
+                <span>{member.designation}</span>
+              </div>
+
+              <div className="social-icons">
+                {member.social?.map((social, index) => (
+                  <a
+                    key={index}
+                    href={social.link}
+                    className={`social-icon ${social.type}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {social.type === "instagram" && <FaInstagram />}
+                    {social.type === "linkedin" && <FaLinkedin />}
+                    {social.type === "twitter" && <FaTwitter />}
+                    {social.type === "facebook" && <FaFacebook />}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
-        </m.div>
-      </Tilt>
+        </Tilt>
+      </m.div>
     );
   };
 
-  // --- LOADING AND ERROR STATES ---
-  if (loading) {
-    return (
-      <div className="about1" id='about'>
-        <div className="content1">
-          <div className="loading-spinner">
-            <h2>Loading Team Members...</h2>
-            <div className="spinner"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  if (error) {
-    return (
-      <div className="about1" id='about'>
-        <div className="content1">
-          <div className="error-message">
-            <h2>{error}</h2>
-            <button onClick={() => window.location.reload()} className="retry-button">
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
+
+      {/* GLOBAL LOADER */}
+      <GlobalLoader isLoading={loading} />
+
+      {/* FLOATING MESSAGE */}
+      <FloatingOrb
+        isVisible={showMessage}
+        message={messageText}
+        type="error"
+        onClose={() => setShowMessage(false)}
+      />
       <style>{`
         /* --- MAIN LAYOUT & HERO --- */
         .about1 {
@@ -461,7 +450,7 @@ const About: React.FC<AboutProps> = () => {
           variants={fadeIn("up", 0)}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: false, amount: 0.7 }}
+          viewport={{ once: true, amount: 0.7 }}
         >
           EXPLORE <span className="title-highlight">ACM SIGAI!!</span>
         </m.h1>

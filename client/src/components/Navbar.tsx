@@ -12,6 +12,7 @@ const Navbar = () => {
       case '/about': title = 'ABOUT US - SIST ACM SIGAI Student chapter'; break;
       case '/events': title = 'ARCHIVES - SIST ACM SIGAI Student chapter'; break;
       case '/membership': title = 'MEMBERSHIP - SIST ACM SIGAI Student chapter'; break;
+      case '/archives': title = 'ARCHIVES - SIST ACM SIGAI Student chapter'; break;
       case '/blogs': title = 'BLOGS - SIST ACM SIGAI Student chapter'; break;
       case '/our-roots': title = 'ROOTS - SIST ACM SIGAI Student chapter'; break;
       case '/join-us': title = 'RECRUITMENT - SIST ACM SIGAI Student chapter'; break;
@@ -276,7 +277,7 @@ const Navbar = () => {
           <li><Link to="/" onClick={closeMenu}>Home</Link></li>
           <li><Link to="/about" onClick={closeMenu}>About Us</Link></li>
           <li><Link to="/membership" onClick={closeMenu}>Membership</Link></li>
-          <li><Link to="/events" onClick={closeMenu}>Archives</Link></li>
+          <li><Link to="/archives" onClick={closeMenu}>Archives</Link></li>
           <li><Link to="/blogs" onClick={closeMenu}>Blogs</Link></li>
           <li><Link to="/our-roots" onClick={closeMenu}>Our Roots</Link></li>
           <li><Link to="/join-us" onClick={closeMenu}>WANNA JOIN US?</Link></li>
