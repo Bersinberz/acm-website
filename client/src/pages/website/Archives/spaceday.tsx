@@ -1,32 +1,35 @@
 import { motion as m } from "framer-motion";
-import { fadeIn } from '../../../components/transitions';
+import { fadeIn } from "../../../components/transitions";
 
 // Import images
-import g1 from '../../../assets/Archives/Genai/G1.jpg';
-import g2 from '../../../assets/Archives/Genai/G2.jpg';
-import g3 from '../../../assets/Archives/Genai/G3.jpg';
-import g4 from '../../../assets/Archives/Genai/G4.jpg';
-import g5 from '../../../assets/Archives/Genai/G5.jpg';
-import g6 from '../../../assets/Archives/Genai/G6.jpg';
-import g7 from '../../../assets/Archives/Genai/G7.jpg';
-import g8 from '../../../assets/Archives/Genai/G8.jpg';
-import g9 from '../../../assets/Archives/Genai/G9.jpg';
-import harsha from '../../../assets/Archives/Genai/HARSHA.jpg';
-import kishore from '../../../assets/Archives/Genai/kishore.jpg';
+import s1 from '../../../assets/Archives/Spaceday/S1.jpg';
+import s2 from '../../../assets/Archives/Spaceday/S2.jpg';
+import s3 from '../../../assets/Archives/Spaceday/S3.jpg';
+import s5 from '../../../assets/Archives/Spaceday/S5.jpg';
+import s6 from '../../../assets/Archives/Spaceday/S6.jpg';
+import s7 from '../../../assets/Archives/Spaceday/S7.jpg';
+import s8 from '../../../assets/Archives/Spaceday/S8.jpg';
+import s9 from '../../../assets/Archives/Spaceday/S9.jpg';
+import s10 from '../../../assets/Archives/Spaceday/S10.jpg';
+import s11 from '../../../assets/Archives/Spaceday/S11.jpg';
+import s12 from '../../../assets/Archives/Spaceday/S12.jpg';
+import s13 from '../../../assets/Archives/Spaceday/S13.jpg';
+import s14 from '../../../assets/Archives/Spaceday/S14.jpg';
+import guest from '../../../assets/Archives/Spaceday/guest.jpg';
 
 // Background Image Import
-import genBg from '../../../assets/Archives/Genai/background.webp';
+import spaceBg from '../../../assets/Archives/Spaceday/background.jpg';
 
 const sliderImages = [
-    g1, g2, g3, g4, g5, g6, g7, g8, g9,
-    g1, g2, g3, g4, g5, g6, g7, g8, g9
+    s1, s2, s3, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14,
+    s1, s2, s3, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14
 ];
 
-const Genai = () => {
+const Spaceday = () => {
     return (
-        <div className="genai-page">
+        <div className="spaceday-page">
             <style>{`
-        .genai-page {
+        .spaceday-page {
           width: 100%;
           padding: 120px 0 60px;
           color: #fff;
@@ -35,7 +38,7 @@ const Genai = () => {
           min-height: 100vh;
 
           /* --- BACKGROUND IMAGE SETUP --- */
-          background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url(${genBg});
+          background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url(${spaceBg});
           background-size: cover;
           background-position: center;
           background-attachment: fixed; 
@@ -64,7 +67,7 @@ const Genai = () => {
         }
 
         .highlight-blue {
-            color: #0099ff; /* Azure Blue */
+            color: #0099ff; /* Primary Blue */
         }
 
         p.content-text {
@@ -100,7 +103,7 @@ const Genai = () => {
             display: flex;
             gap: 30px;
             width: max-content;
-            animation: scroll 40s linear infinite; 
+            animation: scroll 60s linear infinite;
         }
         
         .marquee-container:hover .marquee-track {
@@ -134,18 +137,16 @@ const Genai = () => {
             transform: scale(1.1);
         }
 
-        /* Calculation: 9 items * (600px + 30px) = 5670px */
         @keyframes scroll {
             0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-630px * 9)); }
+            /* Adjusted for roughly 13 unique images */
+            100% { transform: translateX(calc(-630px * 13)); }
         }
 
-        /* --- SPEAKER CARD STYLES --- */
+        /* --- GUEST CARD STYLES --- */
         .guest-container {
             display: flex;
             justify-content: center;
-            flex-wrap: wrap; /* Allows cards to wrap */
-            gap: 40px; /* Space between cards */
             margin-bottom: 80px;
             padding: 0 20px;
         }
@@ -211,7 +212,7 @@ const Genai = () => {
             
             @keyframes scroll {
                 0% { transform: translateX(0); }
-                100% { transform: translateX(calc(-380px * 9)); }
+                100% { transform: translateX(calc(-380px * 13)); }
             }
             
             .text-gradient { font-size: 2.5rem; }
@@ -219,6 +220,7 @@ const Genai = () => {
       `}</style>
 
             {/* --- TITLE SECTION --- */}
+            {/* Uses animate="show" for instant visibility on load */}
             <div className="page-header">
                 <m.h1
                     className="text-gradient"
@@ -226,7 +228,7 @@ const Genai = () => {
                     initial="hidden"
                     animate="show"
                 >
-                    DEEP DIVE INTO <br /> GEN-AI
+                    SPACE DAY
                 </m.h1>
 
                 <m.p
@@ -236,22 +238,24 @@ const Genai = () => {
                     initial="hidden"
                     animate="show"
                 >
-                    A Collaborative Innovation. August 1st, 2024.
+                    Exploring the Cosmos. August 22nd, 2024.
                 </m.p>
             </div>
 
             {/* --- INTRO TEXT --- */}
+            {/* Uses animate="show" to ensure it's visible without needing to scroll first */}
             <m.div
                 variants={fadeIn("up", 0.2)}
                 initial="hidden"
                 animate="show"
             >
                 <p className="content-text">
-                    We are thrilled to announce that the SIST ACM SIGAI Student Chapter hosted its first collaborative event on August 1, 2024, in the Remibai Auditorium at Sathyabama Institute of Science and Technology, Chennai. This event was organized in partnership with the School of Science and Humanities. A special thank you to <strong>Dr. Rekha Chakravarthi</strong>, Dean of the Arts and Sciences department, for facilitating the collaboration.
+                    We are pleased to share that the SIST ACM SIGAI Student Chapter, in collaboration with the Centre for Remote Sensing and Informatics, conducted an event on the occasion of National Space Day on 22/08/2024 (Thursday) at Sathyabama Institute of Science and Technology, Chennai. Students from GHSS Perungudi and Evergreen School were invited to the university to participate in the event.
                 </p>
             </m.div>
 
             {/* --- MARQUEE GALLERY --- */}
+            {/* Reduced amount to 0.1 so it triggers immediately when any part is visible */}
             <m.h2
                 className="section-title"
                 variants={fadeIn("up", 0.2)}
@@ -265,21 +269,21 @@ const Genai = () => {
                 <div className="marquee-track">
                     {sliderImages.map((img, index) => (
                         <div className="marquee-item" key={index}>
-                            <img src={img} alt="Gen-AI Event Highlight" />
+                            <img src={img} alt="Space Day Highlight" />
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* --- SPEAKERS --- */}
+            {/* --- GUEST OF HONOUR --- */}
             <m.h2
                 className="section-title"
                 variants={fadeIn("up", 0.2)}
                 initial="hidden"
                 whileInView="show"
-                viewport={{ once: false, amount: 0.3 }}
+                viewport={{ once: true, amount: 0.1 }}
             >
-                OUR <span className="highlight-blue">SPEAKERS</span>
+                GUEST OF <span className="highlight-blue">HONOUR</span>
             </m.h2>
 
             <m.div
@@ -287,30 +291,15 @@ const Genai = () => {
                 variants={fadeIn("up", 0.3)}
                 initial="hidden"
                 whileInView="show"
-                viewport={{ once: false, amount: 0.3 }}
+                viewport={{ once: true, amount: 0.3 }}
             >
-                {/* Speaker 1 */}
                 <div className="guest-card">
-                    <img src={harsha} alt="Mr. Jonnalagadda Sri Harsha" />
+                    <img src={guest} alt="Padma Shri Dr. Mylswamy Annadurai" />
                     <div className="card-overlay">
                         <div className="guest-info">
-                            <h3>Mr. Jonnalagadda Sri Harsha<br />
+                            <h3>Padma Shri Dr. Mylswamy Annadurai<br />
                                 <span style={{ fontSize: '11px', fontWeight: '300', textTransform: 'initial', color: '#ccc' }}>
-                                    3rd year CSE-DS
-                                </span>
-                            </h3>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Speaker 2 */}
-                <div className="guest-card">
-                    <img src={kishore} alt="Mr. Kishore Ramanan" />
-                    <div className="card-overlay">
-                        <div className="guest-info">
-                            <h3>Mr. Kishore Ramanan<br />
-                                <span style={{ fontSize: '11px', fontWeight: '300', textTransform: 'initial', color: '#ccc' }}>
-                                    3rd year CSE-AIML
+                                    MOON MAN OF INDIA
                                 </span>
                             </h3>
                         </div>
@@ -324,7 +313,7 @@ const Genai = () => {
                 variants={fadeIn("up", 0.2)}
                 initial="hidden"
                 whileInView="show"
-                viewport={{ once: false, amount: 0.3 }}
+                viewport={{ once: true, amount: 0.1 }}
             >
                 KEY <span className="highlight-blue">HIGHLIGHTS</span>
             </m.h2>
@@ -335,9 +324,9 @@ const Genai = () => {
                     variants={fadeIn("up", 0.2)}
                     initial="hidden"
                     whileInView="show"
-                    viewport={{ once: false }}
+                    viewport={{ once: true }}
                 >
-                    The event focused on Generative AI and was attended by an enthusiastic crowd of second-year BSc students. <strong>Ms. Janllyn Avantikha</strong>, a core unit member, started the event by introducing the speakers and providing an overview about the session.
+                    The morning session began with an orientation, during which <strong>Dr. Vigneshwari</strong>, Head of the Department of Computer Science (specializations in AI, AIML, DS), along with <strong>Dr. K Nagamani</strong>, delivered brief speeches outlining the day's events. This was followed by three competitions—painting, quiz, and ideathon—conducted simultaneously. In the painting competition, the participating students were provided with chart paper and given multiple space-related themes to illustrate in their paintings.
                 </m.p>
 
                 <m.p
@@ -345,9 +334,9 @@ const Genai = () => {
                     variants={fadeIn("up", 0.2)}
                     initial="hidden"
                     whileInView="show"
-                    viewport={{ once: false }}
+                    viewport={{ once: true }}
                 >
-                    Two of our third-year students from the CSE Data Science specialization, <strong>Sri Harsha Jonnalagadda</strong> and <strong>Kishore Ramanan</strong>, took the lead as speakers. In the first half of the event, they introduced the students to Generative AI and explained its applications in everyday life in detail. A live demonstration of generating content like text, images, and PPTs was conducted, and input prompts were taken from the audience, encouraging active participation from all students.
+                    The afternoon session featured a workshop led by our chief guest, the esteemed <strong>Padma Shri Dr. Mylswamy Annadurai</strong>, known as the <strong>"Moon Man of India"</strong>. He graciously addressed the event, interacting with all the students. He conducted a seminar on space science and exploration for future India, which captivated the students' interest.
                 </m.p>
 
                 <m.p
@@ -355,9 +344,9 @@ const Genai = () => {
                     variants={fadeIn("up", 0.2)}
                     initial="hidden"
                     whileInView="show"
-                    viewport={{ once: false }}
+                    viewport={{ once: true }}
                 >
-                    In the second half of the event, a hands-on session based on the Ollama model was conducted. This was followed by a digital art competition in which all the participants showcased their extraordinary talent. The event concluded with <strong>Ms. Vaishnavi Battina</strong>, a core team member of the club, delivering a vote of thanks.
+                    The event concluded with a prize distribution ceremony. All the winners of the painting, quiz, and ideathon contests were awarded certificates and Decathlon vouchers worth Rs. 3000, Rs. 2000, and Rs. 1000 for first, second, and third prizes, respectively.
                 </m.p>
 
                 <m.p
@@ -365,9 +354,9 @@ const Genai = () => {
                     variants={fadeIn("up", 0.2)}
                     initial="hidden"
                     whileInView="show"
-                    viewport={{ once: false }}
+                    viewport={{ once: true }}
                 >
-                    The event has been lively and interactive. It was well-received by all the students and dignitaries who attended. We are extremely grateful to the core unit, volunteers and all the people who contributed in making this event a success and we are look forward to hosting more such events in the future.
+                    Overall, the school students thoroughly enjoyed participating in the events. Transport was provided to all the students. The event was a grand success, and all the dignitaries praised it. We are grateful to all the faculty coordinators, student coordinators, and volunteers who contributed to the success of the event.
                 </m.p>
             </div>
 
@@ -375,4 +364,4 @@ const Genai = () => {
     );
 }
 
-export default Genai;
+export default Spaceday;

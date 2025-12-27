@@ -68,7 +68,7 @@ const eventsData = [
     date: "22 AUG 2024",
     desc: "Coordinated Space Day event celebrating astronomical achievements and the intersection of AI with aerospace.",
     img: spaceDay,
-    link: "/Events/SpaceDay"
+    link: "/archives/spaceday"
   },
   {
     id: 6,
@@ -76,7 +76,7 @@ const eventsData = [
     date: "4 SEP 2024",
     desc: "Welcoming the new batch with insights into AI, community building, and the future of technology at SIST.",
     img: freshers,
-    link: "/Events/Synergy"
+    link: "/archives/synergy"
   }
 ];
 

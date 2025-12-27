@@ -16,6 +16,9 @@ import About from "./pages/website/Aboutus";
 import Membership from "./pages/website/Membership";
 import Ourroots from "./pages/website/Ourroots";
 import JoinUs from "./pages/website/Joinus";
+import Archives from "./pages/website/archives";
+import Blogs from "./pages/website/blogs";
+import Events from "./pages/website/events";
 
 /* ---------------- COMPONENTS ---------------- */
 import Nav from "./components/Navbar";
@@ -24,11 +27,14 @@ import LogoLoading from "./components/logoLoader";
 
 /* ---------------- STYLES ---------------- */
 import "./App.css";
-import Archives from "./pages/website/archives";
+
+/* ---------------- OTHERS ---------------- */
 import Inaugural from "./pages/website/Archives/inaugural";
 import Azure from "./pages/website/Archives/azure";
 import Genai from "./pages/website/Archives/genAi";
 import Digiart from "./pages/website/Archives/digitalart";
+import Spaceday from "./pages/website/Archives/spaceday";
+import Synergy from "./pages/website/Archives/synergy";
 
 function App() {
   const location = useLocation();
@@ -94,8 +100,12 @@ function App() {
               <Route path="/archives/azure" element={<Azure />} />
               <Route path="/archives/genai" element={<Genai />} />
               <Route path="/archives/digiart" element={<Digiart />} />
+              <Route path="/archives/spaceday" element={<Spaceday />} />
+              <Route path="/archives/synergy" element={<Synergy />} />
+              <Route path="/blogs" element={<Blogs />} />
               <Route path="/our-roots" element={<Ourroots />} />
               <Route path="/join-us" element={<JoinUs />} />
+              <Route path="/events" element={<Events />} />
             </Routes>
           </motion.div>
         )}

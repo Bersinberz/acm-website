@@ -255,8 +255,7 @@ const Azure = () => {
                 className="section-title"
                 variants={fadeIn("up", 0.2)}
                 initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, amount: 0.3 }}
+                animate="show"
             >
                 EVENT <span className="highlight-blue">GALLERY</span>
             </m.h2>

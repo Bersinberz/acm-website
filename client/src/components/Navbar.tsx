@@ -16,7 +16,7 @@ const Navbar = () => {
       case '/blogs': title = 'BLOGS - SIST ACM SIGAI Student chapter'; break;
       case '/our-roots': title = 'ROOTS - SIST ACM SIGAI Student chapter'; break;
       case '/join-us': title = 'RECRUITMENT - SIST ACM SIGAI Student chapter'; break;
-      case '/fest': title = 'FEST - SIST ACM SIGAI Student chapter'; break;
+      case '/events': title = 'EVENTS - SIST ACM SIGAI Student chapter'; break;
       default: title = 'SIST ACM SIGAI Student chapter';
     }
     document.title = title;
@@ -284,7 +284,7 @@ const Navbar = () => {
         </ul>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Link to="/fest" className="button-fest" onClick={closeMenu}>
+          <Link to="/events" className="button-fest" onClick={closeMenu}>
             <span className="label">EVENTS</span>
           </Link>
 

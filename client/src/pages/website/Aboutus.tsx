@@ -449,7 +449,7 @@ const About: React.FC<AboutProps> = () => {
         <m.h1
           variants={fadeIn("up", 0)}
           initial="hidden"
-          whileInView="show"
+          animate="show"
           viewport={{ once: true, amount: 0.7 }}
         >
           EXPLORE <span className="title-highlight">ACM SIGAI!!</span>
