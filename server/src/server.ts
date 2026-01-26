@@ -37,6 +37,15 @@ const isDevelopment = !isProduction;
 
 const app: Application = express();
 
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use((req, res, next) => {
   res.setHeader(
     "Access-Control-Allow-Origin",
@@ -69,27 +78,11 @@ app.use((req, res, next) => {
     next();
 });
 
-// ========== SECURITY MIDDLEWARE ==========
-app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    if (isProduction) {
-        res.setHeader(
-            'Strict-Transport-Security',
-            'max-age=31536000; includeSubDomains'
-        );
-    }
-
-    next();
-});
 
 app.use(cors({
   origin: "https://acm-website-frontend1.onrender.com",
-  credentials: true,
 }));
 
-app.options("*", cors());
 
 // Rate limiting
 const apiLimiter = rateLimit({
