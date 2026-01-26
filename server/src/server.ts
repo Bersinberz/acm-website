@@ -62,7 +62,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Enable CORS
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
@@ -70,18 +69,23 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (Postman, curl)
+  origin: (origin, callback) => {
+    // allow non-browser requests
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    // normalize origin
+    const normalizedOrigin = origin.replace(/\/$/, "");
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
     }
+
+    // IMPORTANT: allow but do NOT throw error
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 // Rate limiting
