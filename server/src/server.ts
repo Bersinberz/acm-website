@@ -62,31 +62,12 @@ app.use((req, res, next) => {
     next();
 });
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "https://acm-website-frontend1.onrender.com"
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    // allow non-browser requests
-    if (!origin) return callback(null, true);
-
-    // normalize origin
-    const normalizedOrigin = origin.replace(/\/$/, "");
-
-    if (allowedOrigins.includes(normalizedOrigin)) {
-      return callback(null, true);
-    }
-
-    // IMPORTANT: allow but do NOT throw error
-    return callback(null, false);
-  },
+  origin: "https://acm-website-frontend1.onrender.com",
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
+app.options("*", cors());
 
 // Rate limiting
 const apiLimiter = rateLimit({
