@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: prod-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - acm-network
+
+  prod-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: prod-server
+    env_file:
+      - ./server/.env.production
+    environment:
+      NODE_ENV: production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - acm-network
+
+  prod-client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: prod-client
+    ports:
+      - "80:80"
+    depends_on:
+      - prod-server
+    restart: unless-stopped
+    networks:
+      - acm-network
+
+volumes:
+  mongo-data:
+
+networks:
+  acm-network:
+    driver: bridge
