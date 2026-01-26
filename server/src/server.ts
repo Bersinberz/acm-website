@@ -66,7 +66,7 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "https://acm-website-frontend.onrender.com"
+  "https://acm-website-frontend1.onrender.com"
 ];
 
 app.use(cors({
