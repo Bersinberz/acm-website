@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -50,6 +50,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const isFirstLoad = useRef(true);
 
+  /* -------- SHOW LOADER ON EVERY ROUTE CHANGE -------- */
   useEffect(() => {
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
@@ -57,16 +58,36 @@ function App() {
     }
 
     setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 1500);
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
     return () => clearTimeout(timer);
   }, [location.pathname]);
 
   const isAdminRoute = location.pathname.startsWith("/admin");
 
+  /* ---------------- ADMIN ROUTES ---------------- */
+  if (isAdminRoute) {
+    return (
+      <Routes location={location} key={location.pathname}>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/admin/members" element={<Members />} />
+        <Route path="/admin/eventmanager" element={<EventManager />} />
+        <Route path="/admin/recruitments" element={<Recruitments />} />
+        <Route path="/admin/recruitments/:recruitmentId/applications" element={<RecruitmentApplications />} />
+        <Route path="/admin/query" element={<Query />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
+      </Routes>
+    );
+  }
+
+  /* ---------------- WEBSITE ROUTES ---------------- */
   return (
     <>
-      {/* Hide Nav on admin routes */}
-      {!isAdminRoute && <Nav />}
+      <Nav />
 
       <AnimatePresence mode="wait">
         {loading ? (
@@ -81,21 +102,6 @@ function App() {
             transition={{ duration: 0.5 }}
           >
             <Routes location={location}>
-              {/* ---------- ADMIN ---------- */}
-              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<Dashboard />} />
-              <Route path="/admin/members" element={<Members />} />
-              <Route path="/admin/eventmanager" element={<EventManager />} />
-              <Route path="/admin/recruitments" element={<Recruitments />} />
-              <Route
-                path="/admin/recruitments/:recruitmentId/applications"
-                element={<RecruitmentApplications />}
-              />
-              <Route path="/admin/query" element={<Query />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-
-              {/* ---------- WEBSITE ---------- */}
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/membership" element={<Membership />} />
