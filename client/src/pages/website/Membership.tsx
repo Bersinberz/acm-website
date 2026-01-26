@@ -343,20 +343,26 @@ const Membership = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "a") {
+    console.log("✅ Admin shortcut (Ctrl + Shift + G) attached");
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.ctrlKey &&
+        e.shiftKey &&
+        e.key.toLowerCase() === "g"
+      ) {
         e.preventDefault();
         navigate("/admin/login");
       }
     };
 
-    window.addEventListener("keydown", handler);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener("keydown", handler);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [navigate]);
-  
+
   return (
     <>
       <style>{styles}</style>
