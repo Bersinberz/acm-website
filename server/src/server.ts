@@ -47,28 +47,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://acm-website-frontend1.onrender.com"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,PATCH,OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
-
-app.use((req, res, next) => {
     res.setTimeout(30_000, () => {
         res.status(408).json({
             success: false,
@@ -78,16 +56,10 @@ app.use((req, res, next) => {
     next();
 });
 
-
-app.use(cors({
-  origin: "https://acm-website-frontend1.onrender.com",
-}));
-
-
 // Rate limiting
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: {
         success: false,
         message: "Too many requests from this IP, please try again after 15 minutes"
@@ -97,8 +69,8 @@ const apiLimiter = rateLimit({
 });
 
 const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Stricter limit for auth endpoints
+    windowMs: 15 * 60 * 1000,
+    max: 10,
     message: {
         success: false,
         message: "Too many login attempts, please try again after 15 minutes"
