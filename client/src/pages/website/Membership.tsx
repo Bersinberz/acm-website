@@ -1,6 +1,8 @@
 import { motion as m } from "framer-motion";
 import { FaLaptop, FaExclamationTriangle, FaIdCard, FaUserPlus, FaEnvelopeOpenText, FaSignInAlt, FaDownload } from "react-icons/fa";
 import { fadeIn } from "../../components/transitions";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 // --- Data: Steps Configuration ---
 const stepsData = [
@@ -338,6 +340,23 @@ const styles = `
 `;
 
 const Membership = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        navigate("/admin/login");
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+
+    return () => {
+      window.removeEventListener("keydown", handler);
+    };
+  }, [navigate]);
+  
   return (
     <>
       <style>{styles}</style>
