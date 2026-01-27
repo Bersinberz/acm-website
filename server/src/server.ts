@@ -5,7 +5,8 @@ import path from "path";
 import cors from "cors";
 import fs from "fs";
 import rateLimit from "express-rate-limit";
-import adminAuthRoutes from "./routes/adminAuthRoutes";
+
+import adminAuthRoutes from "./routes/authRoutes";
 import homeRoutes from "./routes/homeRoutes";
 import adminSettingsRoutes from "./routes/adminSettingsRoutes";
 import applicationRoutes from "./routes/applicationRoutes";
@@ -18,51 +19,88 @@ import aboutRoute from "./routes/aboutRoute";
 import joinusRoute from "./routes/joinusRoute";
 import eventRoute from "./routes/eventRoute";
 
-
-// Silence dotenv logs
 process.env.DOTENV_CONFIG_QUIET = "true";
 
 const NODE_ENV = process.env.NODE_ENV;
-
-const envFile =
-    NODE_ENV === "production" ? ".env.production" : ".env.development";
+const envFile = NODE_ENV === "production" ? ".env.production" : ".env.development";
 
 dotenv.config({
     path: path.resolve(process.cwd(), envFile),
 });
 
+if (!process.env.MONGO_URI) {
+    console.error("❌ ERROR: MONGO_URI environment variable is required");
+    process.exit(1);
+}
+
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+    console.error("❌ ERROR: JWT_SECRET environment variable is required in production");
+    process.exit(1);
+}
 
 const isProduction = process.env.NODE_ENV === "production";
 const isDevelopment = !isProduction;
 
 const app: Application = express();
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+// ========== SECURITY ENHANCEMENTS ==========
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Powered-By', 'ACM SIGAI');
+    
+    next();
+});
+
+const corsOptions = {
+    origin: isProduction 
+        ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+        : '*',
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    credentials: false,
+    maxAge: 86400
+};
+
+app.use(cors(corsOptions));
+
+app.use(express.json({ 
+    limit: "10mb"
 }));
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.urlencoded({ 
+    extended: true, 
+    limit: "10mb"
+}));
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
     res.setTimeout(30_000, () => {
         res.status(408).json({
             success: false,
-            message: "Request timeout"
+            message: "Request timeout",
+            code: "TIMEOUT"
         });
     });
     next();
 });
 
-// Rate limiting
+app.use((req: Request, res: Response, next: NextFunction) => {
+    if (isDevelopment) {
+        console.log(`${new Date().toISOString()} [${req.method}] ${req.path} - ${req.ip}`);
+    }
+    next();
+});
+
+// ========== RATE LIMITING ==========
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: isProduction ? 100 : 500,
     message: {
         success: false,
-        message: "Too many requests from this IP, please try again after 15 minutes"
+        message: "Too many requests from this IP, please try again after 15 minutes",
+        code: "RATE_LIMIT_EXCEEDED"
     },
     standardHeaders: true,
     legacyHeaders: false,
@@ -70,16 +108,14 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: isProduction ? 5 : 20,
     message: {
         success: false,
-        message: "Too many login attempts, please try again after 15 minutes"
+        message: "Too many login attempts, please try again after 15 minutes",
+        code: "AUTH_RATE_LIMIT_EXCEEDED"
     },
+    skipSuccessfulRequests: true
 });
-
-// ========== BASIC MIDDLEWARE ==========
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ========== FILE UPLOADS DIRECTORY ==========
 const uploadsPath = path.join(__dirname, "../uploads");
@@ -87,88 +123,115 @@ if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
 }
 
-// Serve uploaded files
-app.use("/uploads", express.static(uploadsPath));
+app.use("/uploads", (req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    next();
+}, express.static(uploadsPath));
 
-// ========== ROUTES WITH RATE LIMITING ==========
-app.use("/api/admin/auth", authLimiter, adminAuthRoutes);
-app.use("/api/admin", apiLimiter);
-
-// Public routes
+// ========== ROUTES ==========
 app.use("/api/home", homeRoutes);
 app.use("/api/about", aboutRoute);
 app.use("/api/joinus", joinusRoute);
 app.use("/api/events", eventRoute);
 
-// Protected admin routes
+app.use("/api/admin/auth", authLimiter, adminAuthRoutes);
+
+app.use("/api/admin", apiLimiter);
 app.use("/api/admin/members", memberRoutes);
 app.use("/api/admin/eventmanager", eventmanagerRoutes);
 app.use("/api/admin/recruitments", recruitmentRoutes);
-app.use("/api/admin/applications", applicationRoutes)
+app.use("/api/admin/applications", applicationRoutes);
 app.use("/api/admin/dashboard", dashboardRoutes);
-app.use("/api/admin/contacts", contactRoutes)
+app.use("/api/admin/contacts", contactRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
 
 // ========== HEALTH CHECK ==========
-app.get("/api", (_, res) => {
+app.get("/api/health", async (req: Request, res: Response) => {
+    try {
+        const mongoose = (await import("mongoose")).default;
+        
+        const healthData = {
+            status: "healthy",
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            memory: {
+                rss: `${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`,
+                heapTotal: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)} MB`,
+                heapUsed: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`
+            },
+            database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+            environment: process.env.NODE_ENV
+        };
+        
+        res.status(200).json(healthData);
+    } catch (error) {
+        res.status(500).json({
+            status: "unhealthy",
+            timestamp: new Date().toISOString(),
+            error: "Health check failed"
+        });
+    }
+});
+
+app.get("/api", (req: Request, res: Response) => {
     res.json({
-        status: "OK",
-        message: "ACM SIGAI Backend Running",
+        name: "ACM SIGAI API",
+        version: "1.0.0",
+        status: "operational",
         environment: process.env.NODE_ENV,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
     });
 });
 
-app.get("/api/health", async (_, res) => {
-    const mongoose = (await import("mongoose")).default;
-
-    res.status(200).json({
-        status: "healthy",
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
-        mongo: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-        timestamp: new Date().toISOString(),
-    });
-});
 // ========== ERROR HANDLING ==========
-// 404 handler
 app.use((req: Request, res: Response) => {
     res.status(404).json({
         success: false,
         message: `Route ${req.originalUrl} not found`,
         method: req.method,
+        code: "NOT_FOUND"
     });
 });
 
-// Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error("Error:", {
+    console.error(`Error:`, {
         error: err.message,
         url: req.originalUrl,
         method: req.method,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
     });
 
-    const message = process.env.NODE_ENV === 'production'
-        ? 'Internal server error'
-        : err.message;
-
-    res.status(500).json({
+    const statusCode = (err as any).status || 500;
+    
+    const errorResponse: any = {
         success: false,
-        message: message,
-    });
+        message: isProduction ? "Internal server error" : err.message,
+        code: "SERVER_ERROR",
+        timestamp: new Date().toISOString()
+    };
+
+    if (isDevelopment) {
+        errorResponse.error = err.message;
+    }
+
+    res.status(statusCode).json(errorResponse);
 });
 
+// ========== GRACEFUL SHUTDOWN ==========
 const shutdown = async (signal: string) => {
     console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
-
+    
     try {
         const mongoose = (await import("mongoose")).default;
         await mongoose.connection.close();
         console.log("🗄️ MongoDB connection closed");
     } catch (err) {
-        console.error("Error closing MongoDB", err);
+        console.error("Error closing MongoDB:", err);
     }
-
+    
+    console.log("✅ Server shutdown complete");
     process.exit(0);
 };
 
@@ -181,7 +244,7 @@ process.on("unhandledRejection", (reason) => {
 
 process.on("uncaughtException", (error) => {
     console.error("❌ Uncaught Exception:", error);
-    process.exit(1); // Let Docker restart
+    process.exit(1);
 });
 
 // ========== START SERVER ==========
@@ -196,7 +259,7 @@ const PORT = process.env.PORT || 5000;
         console.log(`🧭 Mode        : ${isProduction ? "PRODUCTION" : "DEVELOPMENT"}`);
         console.log(`🌍 Environment : ${process.env.NODE_ENV}`);
         console.log(`🔌 Port        : ${PORT}`);
-        console.log(`📁 Upload Dir  : ${process.env.UPLOAD_DIR}`);
+        console.log(`📁 Upload Dir  : ${process.env.UPLOAD_DIR || uploadsPath}`);
 
         await connectDB();
         console.log("🗄️  MongoDB    : Connected successfully");
@@ -205,15 +268,14 @@ const PORT = process.env.PORT || 5000;
             console.log("────────────────────────────────────────────");
             console.log(`✅ Server Status : RUNNING`);
             console.log(`🏥 Health Check  : http://localhost:${PORT}/api/health`);
+            console.log(`📚 API Root      : http://localhost:${PORT}/api`);
 
             if (isDevelopment) {
-                console.log(`🧪 Dev API Root  : http://localhost:${PORT}/api`);
-                console.log("🔁 Hot Reload   : ENABLED");
+                console.log("🔁 Development Mode : ENABLED");
             }
 
             if (isProduction) {
-                console.log("🛡️  Security    : Production hardened");
-                console.log("📦 Logs         : Minimal");
+                console.log("🛡️  Production Mode : SECURE");
             }
 
             console.log(`⏱️  Started At  : ${new Date().toLocaleString()}`);
@@ -221,7 +283,7 @@ const PORT = process.env.PORT || 5000;
         });
 
     } catch (error) {
-        console.error("❌ Server failed to start");
+        console.error("❌ Server failed to start:");
         console.error(error);
         process.exit(1);
     }

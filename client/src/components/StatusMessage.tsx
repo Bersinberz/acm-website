@@ -4,7 +4,7 @@ import { useEffect } from "react";
 interface MessageProps {
   isVisible: boolean;
   message: string;
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'info';
   onClose: () => void;
 }
 
@@ -14,10 +14,33 @@ export const FloatingOrb: React.FC<MessageProps> = ({
   type,
   onClose
 }) => {
-  const isSuccess = type === 'success';
-  const glow = isSuccess
-    ? 'rgba(92, 160, 242, 0.5)'
-    : 'rgba(255, 71, 87, 0.5)';
+  // Determine colors based on type
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'success':
+        return {
+          bgColor: '#5CA0F2',
+          glow: 'rgba(92, 160, 242, 0.5)'
+        };
+      case 'error':
+        return {
+          bgColor: '#ff4757',
+          glow: 'rgba(255, 71, 87, 0.5)'
+        };
+      case 'info':
+        return {
+          bgColor: '#3b82f6',
+          glow: 'rgba(59, 130, 246, 0.5)'
+        };
+      default:
+        return {
+          bgColor: '#5CA0F2',
+          glow: 'rgba(92, 160, 242, 0.5)'
+        };
+    }
+  };
+
+  const { bgColor, glow } = getTypeStyles();
 
   // ⏱ Auto close after 5 seconds
   useEffect(() => {
@@ -68,13 +91,11 @@ export const FloatingOrb: React.FC<MessageProps> = ({
           >
             <div
               style={{
-                background: isSuccess ? '#5CA0F2' : '#ff4757',
+                background: bgColor,
                 borderRadius: '50%',
                 width: '10px',
                 height: '10px',
-                boxShadow: `0 0 10px ${
-                  isSuccess ? '#5CA0F2' : '#ff4757'
-                }`
+                boxShadow: `0 0 10px ${bgColor}`
               }}
             />
 

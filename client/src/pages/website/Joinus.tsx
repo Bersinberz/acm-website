@@ -67,14 +67,15 @@ const JoinUs: React.FC = () => {
     const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     // 2. ORB STATE
-    const [orb, setOrb] = useState<{ isVisible: boolean; message: string; type: 'success' | 'error' }>({
+    const [orb, setOrb] = useState<{ isVisible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
         isVisible: false,
         message: '',
         type: 'success'
     });
 
-    const triggerOrb = (message: string, type: 'success' | 'error') => {
-        setOrb({ isVisible: true, message, type });
+    const triggerOrb = (message: string, type: 'success' | 'error' | 'info') => {
+        const orbType = type === 'info' ? 'success' : type;
+        setOrb({ isVisible: true, message, type: orbType });
     };
 
     const closeOrb = () => {
@@ -100,10 +101,18 @@ const JoinUs: React.FC = () => {
                 }));
 
                 setOpenings(mappedRoles);
-            } catch (err) {
+
+                // Show success message if no recruitments (empty state)
+                if (mappedRoles.length === 0) {
+                    triggerOrb(res?.message || "No active recruitments at the moment.", "success"); // Changed from "info" to "success"
+                } else if (res?.message) {
+                    triggerOrb(res.message, "success");
+                }
+            } catch (err: any) {
                 console.error("Recruitment fetch failed", err);
                 setOpenings([]);
-                triggerOrb("Failed to load recruitment openings.", "error");
+                const errorMsg = err.response?.data?.message || "Failed to load recruitment openings.";
+                triggerOrb(errorMsg, "error");
             }
         };
 
@@ -114,6 +123,12 @@ const JoinUs: React.FC = () => {
     const openApplicationModal = async (role: Role) => {
         try {
             const res = await getRecruitmentById(role.id);
+
+            if (!res.success) {
+                triggerOrb(res.message || "Failed to load application form.", "error");
+                return;
+            }
+
             const recruitmentData = res.recruitment;
 
             const roleWithQuestions = {
@@ -138,9 +153,15 @@ const JoinUs: React.FC = () => {
             setValidationErrors({});
             setSuccess(false);
             setShowModal(true);
-        } catch (err) {
+
+            // Show success message from server if available
+            if (res.message) {
+                triggerOrb(res.message, "success");
+            }
+        } catch (err: any) {
             console.error("Failed to fetch role details:", err);
-            triggerOrb("Failed to load application form.", "error");
+            const errorMsg = err.response?.data?.message || "Failed to load application form.";
+            triggerOrb(errorMsg, "error");
         }
     };
 
@@ -235,7 +256,7 @@ const JoinUs: React.FC = () => {
 
         if (errors.length > 0) {
             setValidationErrors(prev => ({ ...prev, [questionId]: errors.join('. ') }));
-            triggerOrb(errors[0], 'error'); // Show first error in Orb
+            triggerOrb(errors[0], 'error');
             return;
         }
 
@@ -254,15 +275,22 @@ const JoinUs: React.FC = () => {
                 }));
                 const updatedFiles = [...currentFiles, ...uploadedFiles];
                 handleAnswerChange(questionId, updatedFiles);
-                triggerOrb("Files uploaded successfully", "success");
+                triggerOrb(uploadRes.message || "Files uploaded successfully", "success");
+            } else {
+                // Handle non-success response from upload
+                triggerOrb(uploadRes.message || "File upload failed", "error");
             }
         } catch (err: any) {
-            const errorMsg = err.response?.data?.message || 'Failed to upload files';
+            const serverResponse = err.response?.data;
+            const errorMsg = serverResponse?.message ||
+                (serverResponse?.code === "NO_FILES" ? "Please select files to upload" :
+                    'Failed to upload files');
+
             setValidationErrors(prev => ({
                 ...prev,
                 [questionId]: errorMsg
             }));
-            triggerOrb(errorMsg, 'error');
+            triggerOrb(errorMsg, "error");
         } finally {
             setUploading(false);
         }
@@ -344,16 +372,35 @@ const JoinUs: React.FC = () => {
                 setAnswers([]);
                 triggerOrb(res.message || "Application submitted successfully!", "success");
             } else {
-                // Safety fallback (rare)
-                triggerOrb(res?.message || "Submission failed", "error");
+                // Handle non-success responses from server
+                const errorMessage = res?.message ||
+                    (res?.code === "VALIDATION_ERROR" ? "Please check your application details" :
+                        res?.code === "DUPLICATE_APPLICATION" ? "You have already applied for this position" :
+                            res?.code === "INVALID_ID" ? "Invalid recruitment ID" :
+                                res?.code === "NOT_FOUND" ? "Recruitment not found" :
+                                    res?.code === "SERVER_ERROR" ? "Server error, please try again" :
+                                        "Submission failed");
+                triggerOrb(errorMessage, "error");
             }
         } catch (error: any) {
-            const serverMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                "Something went wrong";
+            // Extract error message from axios response structure
+            const serverResponse = error?.response?.data;
+            let errorMessage = "Something went wrong";
 
-            triggerOrb(serverMessage, "error");
+            if (serverResponse) {
+                // Use server message if available
+                errorMessage = serverResponse.message ||
+                    (serverResponse.code === "VALIDATION_ERROR" ? "Please check your application details" :
+                        serverResponse.code === "DUPLICATE_APPLICATION" ? "You have already applied for this position" :
+                            serverResponse.code === "INVALID_ID" ? "Invalid recruitment ID" :
+                                serverResponse.code === "NOT_FOUND" ? "Recruitment not found" :
+                                    serverResponse.code === "SERVER_ERROR" ? "Server error, please try again" :
+                                        "Submission failed");
+            } else if (error?.message) {
+                errorMessage = error.message;
+            }
+
+            triggerOrb(errorMessage, "error");
         } finally {
             setSubmitting(false);
         }
@@ -739,6 +786,11 @@ const JoinUs: React.FC = () => {
                     max-height: calc(100vh - 120px);
                 }
             }
+                .orb-info {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-color: #60a5fa;
+}
+
         `}</style>
             <div className="join-page">
                 <>

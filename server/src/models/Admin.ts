@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const AdminSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true },
-    password: { type: String, required: true }, // ❗ plain text
+    password: { type: String, required: true },
     role: { type: String, default: "admin" },
     isActive: { type: Boolean, default: true },
   },
