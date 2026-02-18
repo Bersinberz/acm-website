@@ -27,6 +27,24 @@ const Navbar = () => {
   return (
     <>
       <style>{`
+        /* --- Skip Link --- */
+        .skip-link {
+          position: absolute;
+          top: -100%;
+          left: 16px;
+          z-index: 10000;
+          padding: 12px 24px;
+          background: #000;
+          color: #fff;
+          font-weight: 700;
+          border-radius: 0 0 8px 8px;
+          text-decoration: none;
+          transition: top 0.2s ease;
+        }
+        .skip-link:focus {
+          top: 0;
+        }
+
         /* --- Base Navbar Styles --- */
         .navbar {
           box-sizing: border-box;
@@ -263,11 +281,12 @@ const Navbar = () => {
         }
       `}</style>
 
-      <nav className="navbar">
+      <a className="skip-link" href="#main-content">Skip to content</a>
+      <nav className="navbar" aria-label="Main navigation">
         <div className="menu-logo-container">
           <div className="logo">
             <Link to="/">
-              <img src={sc} alt="SIST ACM SIGAI logo" />
+              <img src={sc} alt="SIST ACM SIGAI logo" width="90" height="90" />
             </Link>
           </div>
         </div>
@@ -287,10 +306,18 @@ const Navbar = () => {
             <span className="nav-btn-text">EVENTS</span>
           </Link>
 
-          <div className={`hamburger ${menuOpen ? 'active' : ''}`} onClick={toggleMenu}>
-            <span className="bar"></span>
-            <span className="bar"></span>
-            <span className="bar"></span>
+          <div
+            className={`hamburger ${menuOpen ? 'active' : ''}`}
+            onClick={toggleMenu}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenu(); } }}
+            role="button"
+            tabIndex={0}
+            aria-label="Toggle navigation menu"
+            aria-expanded={menuOpen}
+          >
+            <span className="bar" aria-hidden="true"></span>
+            <span className="bar" aria-hidden="true"></span>
+            <span className="bar" aria-hidden="true"></span>
           </div>
         </div>
       </nav>

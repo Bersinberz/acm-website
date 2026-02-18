@@ -96,6 +96,7 @@ function App() {
           <motion.div
             key={location.pathname}
             className="main-contentapp"
+            id="main-content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

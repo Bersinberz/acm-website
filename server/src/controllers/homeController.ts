@@ -1,27 +1,12 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import Userquery, { IContact } from "../models/Contact";
 import Contact from "../models/Contact";
 import AdminSettings from "../models/AdminSettings";
 import { sendContactMail } from "../utils/sendMail";
 
-// Define error types for TypeScript
-interface MongoError extends Error {
-  name: string;
-  code?: number;
-  message: string;
-}
-
-interface ValidationError extends Error {
-  name: string;
-  message: string;
-  errors?: Record<string, any>;
-}
-
-// Validation helper functions
+// --- VALIDATION HELPER ---
 const validateField = (name: string, value: string): string => {
   const trimmedValue = value?.trim() || '';
-
   switch (name) {
     case 'Firstname':
       if (!trimmedValue) return 'First name is required';
@@ -29,31 +14,26 @@ const validateField = (name: string, value: string): string => {
       if (trimmedValue.length > 50) return 'First name must be less than 50 characters';
       if (!/^[A-Za-z\s]+$/.test(trimmedValue)) return 'First name can only contain letters and spaces';
       return '';
-
     case 'Lastname':
       if (!trimmedValue) return 'Last name is required';
       if (trimmedValue.length < 2) return 'Last name must be at least 2 characters';
       if (trimmedValue.length > 50) return 'Last name must be less than 50 characters';
       if (!/^[A-Za-z\s]+$/.test(trimmedValue)) return 'Last name can only contain letters and spaces';
       return '';
-
     case 'Email':
       if (!trimmedValue) return 'Email is required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue)) return 'Please enter a valid email address';
       if (trimmedValue.length > 100) return 'Email must be less than 100 characters';
       return '';
-
     case 'Mobile':
       if (!trimmedValue) return 'Mobile number is required';
       if (!/^[0-9]{10}$/.test(trimmedValue)) return 'Please enter a valid 10-digit mobile number';
       return '';
-
     case 'Message':
       if (!trimmedValue) return 'Message is required';
       if (trimmedValue.length < 10) return 'Message must be at least 10 characters';
       if (trimmedValue.length > 1000) return 'Message must be less than 1000 characters';
       return '';
-
     default:
       return '';
   }
@@ -63,7 +43,6 @@ export const submitContactForm = async (req: Request, res: Response) => {
   try {
     const { Firstname, Lastname, Email, Mobile, Message } = req.body;
 
-    /* ---------------- VALIDATION ---------------- */
     const validationErrors: Record<string, string> = {};
     const fields = [
       { name: "Firstname", value: Firstname },
@@ -86,7 +65,6 @@ export const submitContactForm = async (req: Request, res: Response) => {
       });
     }
 
-    /* ---------------- SANITIZE ---------------- */
     const sanitizedData = {
       Firstname: Firstname.trim(),
       Lastname: Lastname.trim(),
@@ -95,19 +73,17 @@ export const submitContactForm = async (req: Request, res: Response) => {
       Message: Message.trim(),
     };
 
-    /* ---------------- SAVE TO DB ---------------- */
     const contact = await Contact.create(sanitizedData);
     const referenceId = contact._id.toString().slice(0, 8);
     const fullName = `${sanitizedData.Firstname} ${sanitizedData.Lastname}`;
+    const submissionDate = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
 
-    /* ---------------- ADMIN MAIL ---------------- */
+    // --- SEND EMAILS (ADMIN) ---
     try {
-      const submissionDate = new Date().toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-
       const adminHtml = `
 <!DOCTYPE html>
 <html>
@@ -279,7 +255,7 @@ export const submitContactForm = async (req: Request, res: Response) => {
       console.error("❌ Admin mail failed:", adminMailError);
     }
 
-    /* ---------------- USER ACKNOWLEDGEMENT MAIL ---------------- */
+    // --- SEND EMAILS (USER) ---
     try {
       const userHtml = `
 <!DOCTYPE html>
@@ -398,10 +374,9 @@ export const submitContactForm = async (req: Request, res: Response) => {
       console.error("❌ User mail failed:", userMailError);
     }
 
-    /* ---------------- RESPONSE ---------------- */
     return res.status(201).json({
       success: true,
-      message: "Form submitted successfully",
+      message: "The form has been submitted successfully. Our team will get back to you soon.",
       submissionId: contact._id,
       referenceId,
       timestamp: contact.createdAt,
@@ -409,34 +384,33 @@ export const submitContactForm = async (req: Request, res: Response) => {
 
   } catch (error: unknown) {
     console.error("Contact form error:", error);
-
     if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).json({
-        success: false,
-        message: "Database validation error",
-        error: error.message,
-      });
+      return res.status(400).json({ success: false, message: "Database validation error", error: error.message });
     }
-
-    if (error instanceof Error && "code" in error && (error as any).code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: "Duplicate submission detected",
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
+// --- OPTIMIZED SETTINGS FETCH (CACHE ENABLED) ---
+let settingsCache: any | null = null;
+let lastCacheTime = 0;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 Hour
+
 export const getAdminSettings = async (_req: Request, res: Response) => {
   try {
+    // 1. Check Cache
+    if (settingsCache && (Date.now() - lastCacheTime < CACHE_DURATION)) {
+      return res.status(200).json({
+        success: true,
+        data: settingsCache,
+        source: 'cache'
+      });
+    }
+
+    // 2. Fetch from DB
     let settings = await AdminSettings.findOne();
 
-    // If no settings exist, create default
+    // 3. Create Default if missing
     if (!settings) {
       settings = await AdminSettings.create({
         orgName: "SIST ACM SIGAI Student Chapter",
@@ -444,37 +418,23 @@ export const getAdminSettings = async (_req: Request, res: Response) => {
         mission: "",
         vision: "",
         ideology: "",
-        contact: {
-          location: "",
-          email: "",
-          phone: "",
-        },
-        socials: {
-          instagram: "",
-          linkedin: "",
-          twitter: "",
-        },
+        contact: { location: "", email: "", phone: "" },
+        socials: { instagram: "", linkedin: "", twitter: "" },
       });
     }
+
+    // 4. Update Cache
+    settingsCache = settings;
+    lastCacheTime = Date.now();
 
     return res.status(200).json({
       success: true,
       data: settings,
+      source: 'database'
     });
+
   } catch (error: unknown) {
     console.error("Error fetching admin settings:", error);
-
-    if (error instanceof Error) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to fetch admin settings",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch admin settings",
-    });
+    return res.status(500).json({ success: false, message: "Failed to fetch admin settings" });
   }
-};
+}; 

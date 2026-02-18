@@ -417,7 +417,7 @@ const Query: React.FC = () => {
                                                 } fs-5`}
                                         />
                                     </button>
-                                    
+
                                     <button
                                         className="btn btn-icon text-secondary hover-text-danger"
                                         title="Delete"

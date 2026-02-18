@@ -24,7 +24,7 @@ const LogoLoading = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       style={loadingContainerStyle}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -32,7 +32,7 @@ const LogoLoading = () => {
     >
       <motion.img
         src={loadingImage}
-        alt="Loading"
+        alt="SIST ACM SIGAI logo loading"
         style={loadingImageStyle}
         animate={{ rotateY: 360 }}
         transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
