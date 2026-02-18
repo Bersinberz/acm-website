@@ -1,6 +1,3 @@
-/* --- Google Fonts with font-display swap --- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Noto+Sans+JP:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;600;700&display=swap');
-
 /* --- 1. GLOBAL VARIABLES --- */
 :root {
   --primary-blue: #3b82f6;
@@ -12,23 +9,9 @@
   --text-muted: #94a3b8;
 }
 
-/* --- Screen Reader Only --- */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 html {
   scroll-behavior: smooth;
-  scrollbar-width: none;
-  /* Firefox */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* --- 2. BASE STYLES --- */
@@ -36,8 +19,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  font-family: 'Poppins', 'Noto Sans JP', sans-serif;
-  /* Added Poppins as primary */
+  font-family: 'Poppins', 'Noto Sans JP', sans-serif; /* Added Poppins as primary */
   background-color: var(--bg-dark);
   color: var(--text-main);
   overflow-x: hidden;
@@ -64,8 +46,7 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  isolation: isolate;
-  /* Creates a new stacking context */
+  isolation: isolate; /* Creates a new stacking context */
 }
 
 /* PERFORMANCE UPGRADE: 
@@ -80,22 +61,18 @@ body {
   width: 200%;
   height: 200%;
   z-index: -2;
-
-  background: radial-gradient(circle,
-      #1e1b4b 0%,
-      /* Deep Indigo Core */
-      #0f172a 30%,
-      /* Slate Dark */
-      #020617 60%,
-      /* Near Black */
-      #000000 100%
-      /* Void */
-    );
-
+  
+  background: radial-gradient(
+    circle,
+    #1e1b4b 0%,    /* Deep Indigo Core */
+    #0f172a 30%,   /* Slate Dark */
+    #020617 60%,   /* Near Black */
+    #000000 100%   /* Void */
+  );
+  
   background-size: 100% 100%;
   animation: nebulaDrift 20s ease-in-out infinite alternate;
-  will-change: transform;
-  /* Hint to browser to use GPU */
+  will-change: transform; /* Hint to browser to use GPU */
 }
 
 /* TEXTURE UPGRADE:
@@ -119,11 +96,9 @@ body {
   0% {
     transform: translate(0, 0);
   }
-
   50% {
     transform: translate(-10%, -10%);
   }
-
   100% {
     transform: translate(5%, 5%);
   }

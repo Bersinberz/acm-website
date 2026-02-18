@@ -4,286 +4,285 @@ import { createEvent, deleteEvent, getAllEvents, toggleEventDisplay, updateEvent
 
 // --- CSS Styles for Animation & Design ---
 const styles = `
-/* --- Keyframes --- */
-@keyframes slideInUp {
+  /* --- Keyframes --- */
+  @keyframes slideInUp {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse - glow {
-  0 % { box- shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-}
-70 % { box- shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-100 % { box- shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  }
+  
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
   }
 
   /* --- Glassmorphism Card Design --- */
-  .event - card {
-  background: rgba(31, 41, 55, 0.7);
-  backdrop - filter: blur(12px);
-  -webkit - backdrop - filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border - radius: 20px;
-  transition: all 0.4s cubic - bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  overflow: hidden;
-}
+  .event-card {
+    background: rgba(31, 41, 55, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+  }
   
-  .event - card:hover {
-  transform: translateY(-8px) scale(1.02);
-  border - color: rgba(59, 130, 246, 0.5);
-  box - shadow: 0 20px 40px - 10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.2);
-  background: rgba(31, 41, 55, 0.95);
-  z - index: 10;
-}
+  .event-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.2);
+    background: rgba(31, 41, 55, 0.95);
+    z-index: 10;
+  }
 
-  .event - card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: -100 %; width: 100 %; height: 100 %;
-  background: linear - gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-  transition: 0.5s;
-}
+  .event-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transition: 0.5s;
+  }
   
-  .event - card: hover::before {
-  left: 100 %;
-}
+  .event-card:hover::before {
+    left: 100%;
+  }
 
   /* --- Action Buttons --- */
-  .card - action - btn {
-  width: 40px;
-  height: 40px;
-  border - radius: 12px;
-  display: flex;
-  align - items: center;
-  justify - content: center;
-  transition: all 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-}
+  .card-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    cursor: pointer;
+  }
 
-  .card - action - btn:hover {
-  transform: scale(1.1);
-}
+  .card-action-btn:hover {
+    transform: scale(1.1);
+  }
 
-  .btn - edit:hover { background: rgba(13, 110, 253, 0.2); color: #3b82f6; border - color: #3b82f6; }
-  .btn - delete:hover { background: rgba(220, 53, 69, 0.2); color: #ef4444; border - color: #ef4444; }
+  .btn-edit:hover { background: rgba(13, 110, 253, 0.2); color: #3b82f6; border-color: #3b82f6; }
+  .btn-delete:hover { background: rgba(220, 53, 69, 0.2); color: #ef4444; border-color: #ef4444; }
 
   /* --- IOS Toggle Switch --- */
-  .toggle -switch {
-  position: relative;
-  display: inline - block;
-  width: 48px;
-  height: 26px;
-}
-
-  .toggle -switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+  }
+  
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
   
   .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background - color: #374151;
-  transition: .4s;
-  border - radius: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #374151;
+    transition: .4s;
+    border-radius: 34px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
   
   .slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background - color: white;
-  transition: .4s;
-  border - radius: 50 %;
-  box - shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-input: checked + .slider {
-  background - color: #10b981; /* Green when active */
-  border - color: #10b981;
-}
-
-input: checked + .slider:before {
-  transform: translateX(22px);
-}
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  
+  input:checked + .slider {
+    background-color: #10b981; /* Green when active */
+    border-color: #10b981;
+  }
+  
+  input:checked + .slider:before {
+    transform: translateX(22px);
+  }
 
   /* --- Modal & Form (Preserved) --- */
-  .custom - modal - overlay {
-  background: rgba(0, 0, 0, 0.8);
-  backdrop - filter: blur(8px);
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  z - index: 1050;
-  display: flex; align - items: center; justify - content: center;
-  animation: fadeIn 0.3s ease - out;
-}
+  .custom-modal-overlay {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1050;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-  .custom - modal - content {
-  background: #1f2937;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box - shadow: 0 25px 50px - 12px rgba(0, 0, 0, 0.7);
-  border - radius: 20px;
-  width: 100 %; max - width: 800px; max - height: 90vh; overflow - y: auto;
-}
+  .custom-modal-content {
+    background: #1f2937;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto;
+  }
 
   /* Scrollbar */
-  .custom - modal - content:: -webkit - scrollbar { width: 8px; }
-  .custom - modal - content:: -webkit - scrollbar - track { background: transparent; }
-  .custom - modal - content:: -webkit - scrollbar - thumb { background - color: rgba(255, 255, 255, 0.2); border - radius: 4px; }
+  .custom-modal-content::-webkit-scrollbar { width: 8px; }
+  .custom-modal-content::-webkit-scrollbar-track { background: transparent; }
+  .custom-modal-content::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 4px; }
 
-  .form - control - dark {
-  background - color: #374151;
-  border: 1px solid #4b5563;
-  color: #ffffff!important;
-}
-  .form - control - dark:focus {
-  background - color: #374151;
-  border - color: #3b82f6;
-  box - shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
-}
-  .form - control - dark.is - invalid {
-  border - color: #dc3545;
-  background: rgba(220, 53, 69, 0.1);
-}
-  .form - control - dark.is - invalid:focus {
-  border - color: #dc3545;
-  box - shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
-}
-  .form - control - dark::placeholder { color: #9ca3af!important; }
-  .form - control - dark:: -webkit - calendar - picker - indicator { filter: invert(1); cursor: pointer; }
+  .form-control-dark {
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    color: #ffffff !important;
+  }
+  .form-control-dark:focus {
+    background-color: #374151;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+  }
+  .form-control-dark.is-invalid {
+    border-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+  }
+  .form-control-dark.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  }
+  .form-control-dark::placeholder { color: #9ca3af !important; }
+  .form-control-dark::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
   
-  .form - section {
-  background: rgba(255, 255, 255, 0.03);
-  border - radius: 12px;
-  padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
+  .form-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
   
-  .custom - modal - overlay.closing {
-  animation: fadeOut 0.3s ease -in forwards;
-}
+  .custom-modal-overlay.closing {
+    animation: fadeOut 0.3s ease-in forwards;
+  }
 
-  .custom - modal - overlay.closing.custom - modal - content {
-  animation: scaleOut 0.25s ease -in forwards;
-}
+  .custom-modal-overlay.closing .custom-modal-content {
+    animation: scaleOut 0.25s ease-in forwards;
+  }
 
-@keyframes fadeOut {
+  @keyframes fadeOut {
     from { opacity: 1; }
     to { opacity: 0; }
-}
+  }
 
-@keyframes scaleOut {
+  @keyframes scaleOut {
     from { transform: scale(1); opacity: 1; }
     to { transform: scale(0.92); opacity: 0; }
-}
+  }
 
-  .modal - content - glass {
-  background: #1f2937!important;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box - shadow: 0 25px 50px - 12px rgba(0, 0, 0, 0.8);
-  color: #ffffff;
-}
+  .modal-content-glass {
+    background: #1f2937 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+  }
 
-  .modal - content - glass.modal - body {
-  background: transparent;
-}
+  .modal-content-glass .modal-body {
+    background: transparent;
+  }
 
-  .modal - content - glass h4 {
-  color: #ffffff;
-}
+  .modal-content-glass h4 {
+    color: #ffffff;
+  }
 
-  .modal - content - glass p {
-  color: #9ca3af;
-}
+  .modal-content-glass p {
+    color: #9ca3af;
+  }
 
   /* --- Validation Styles --- */
-  .invalid - feedback - custom {
-  display: block;
-  color: #dc3545;
-  font - size: 0.875rem;
-  margin - top: 0.25rem;
-  margin - left: 0.25rem;
-}
+  .invalid-feedback-custom {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    margin-left: 0.25rem;
+  }
 
-  .character - counter {
-  font - size: 0.75rem;
-  color: #6c757d;
-  margin - top: 0.25rem;
-  margin - left: 0.5rem;
-}
+  .character-counter {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    margin-left: 0.5rem;
+  }
 
-  .character - counter.warning {
-  color: #ffc107;
-}
+  .character-counter.warning {
+    color: #ffc107;
+  }
 
-  .character - counter.danger {
-  color: #dc3545;
-}
+  .character-counter.danger {
+    color: #dc3545;
+  }
 
   .btn:disabled {
-  opacity: 0.6;
-  cursor: not - allowed;
-}
-
-  .required - asterisk {
-  color: #dc3545;
-  margin - left: 2px;
-}
-
-  .phone - prefix {
-  background - color: #1f2937;
-  border: 1px solid #4b5563;
-  color: #9ca3af;
-  padding: 0.375rem 0.75rem;
-  border - right: none;
-  border - radius: 0.375rem 0 0 0.375rem;
-}
-
-/* --- MOBILE RESPONSIVENESS (< 768px) --- */
-@media(max - width: 768px) {
-      /* 1. Add offset for floating navbar */
-      .mobile - offset {
-    padding - top: 85px!important;
+    opacity: 0.6;
+    cursor: not-allowed;
   }
+
+  .required-asterisk {
+    color: #dc3545;
+    margin-left: 2px;
+  }
+
+  .phone-prefix {
+    background-color: #1f2937;
+    border: 1px solid #4b5563;
+    color: #9ca3af;
+    padding: 0.375rem 0.75rem;
+    border-right: none;
+    border-radius: 0.375rem 0 0 0.375rem;
+  }
+
+  /* --- MOBILE RESPONSIVENESS (< 768px) --- */
+  @media (max-width: 768px) {
+      /* 1. Add offset for floating navbar */
+      .mobile-offset {
+          padding-top: 85px !important;
+      }
 
       /* 2. Adjust modal width and margin for mobile */
-      .custom - modal - content {
-    width: 95 % !important;
-    margin: 10px!important;
-    max - height: 85vh;
-  }
+      .custom-modal-content {
+          width: 95% !important;
+          margin: 10px !important;
+          max-height: 85vh;
+      }
 
       /* 3. Button full width on mobile */
-      .mobile - w - 100 {
-    width: 100 % !important;
-    justify - content: center;
-  }
+      .mobile-w-100 {
+          width: 100% !important;
+          justify-content: center;
+      }
       
-      .event - card:hover {
-    transform: translateY(-4px) scale(1.01); /* Subtle hover on touch */
-  }
+      .event-card:hover {
+          transform: translateY(-4px) scale(1.01); /* Subtle hover on touch */
+      }
 
       /* 4. Adjust phone input for mobile */
-      .phone - input - group {
-    flex - direction: column;
-  }
+      .phone-input-group {
+          flex-direction: column;
+      }
       
-      .phone - prefix {
-    border - radius: 0.375rem 0.375rem 0 0;
-    border - right: 1px solid #4b5563;
-    border - bottom: none;
-  }
+      .phone-prefix {
+          border-radius: 0.375rem 0.375rem 0 0;
+          border-right: 1px solid #4b5563;
+          border-bottom: none;
+      }
       
-      .phone - input {
-    border - radius: 0 0 0.375rem 0.375rem;
+      .phone-input {
+          border-radius: 0 0 0.375rem 0.375rem;
+      }
   }
-}
 `;
 
 /* Types */
@@ -743,7 +742,7 @@ const EventManager: React.FC = () => {
         )
       );
 
-      showToast("success", res?.message || `Event ${newDisplay ? "shown" : "hidden"} `);
+      showToast("success", res?.message || `Event ${newDisplay ? "shown" : "hidden"}`);
     } catch (error: any) {
       showToast("error", error.message);
     }
@@ -888,23 +887,23 @@ const EventManager: React.FC = () => {
             <div
               key={event._id}
               className="col-12 col-md-6 col-xl-4"
-              style={{ animation: `slideInUp 0.5s ease - out forwards ${index * 0.1} s`, opacity: 0 }}
+              style={{ animation: `slideInUp 0.5s ease-out forwards ${index * 0.1}s`, opacity: 0 }}
             >
               <div className="event-card h-100 d-flex flex-column p-4">
 
                 {/* Card Top: Status & Toggle */}
                 <div className="d-flex justify-content-between align-items-start mb-4">
                   <div
-                    className={`badge rounded - pill px - 3 py - 2 ${event.display
-                        ? "bg-success bg-opacity-10 text-success"
-                        : "bg-secondary bg-opacity-25 text-secondary"
-                      } `}
+                    className={`badge rounded-pill px-3 py-2 ${event.display
+                      ? "bg-success bg-opacity-10 text-success"
+                      : "bg-secondary bg-opacity-25 text-secondary"
+                      }`}
                   >
                     <i
                       className={`bi ${event.display
-                          ? "bi-eye-fill"
-                          : "bi-eye-slash-fill"
-                        } me - 2`}
+                        ? "bi-eye-fill"
+                        : "bi-eye-slash-fill"
+                        } me-2`}
                     ></i>
                     {event.display ? "Visible" : "Hidden"}
                   </div>
@@ -986,7 +985,7 @@ const EventManager: React.FC = () => {
 
       {/* --- Unified Modal (Create & Edit) --- */}
       {showModal && (
-        <div className={`custom - modal - overlay ${isClosing ? 'closing' : ''} `}>
+        <div className={`custom-modal-overlay ${isClosing ? 'closing' : ''}`}>
           <div className="custom-modal-content p-4 m-3">
 
             {/* Modal Header */}
@@ -1012,7 +1011,7 @@ const EventManager: React.FC = () => {
                   Event Name <span className="required-asterisk">*</span>
                 </label>
                 <input
-                  className={`form - control form - control - dark mb - 2 p - 3 ${validationErrors.name ? 'is-invalid' : ''} `}
+                  className={`form-control form-control-dark mb-2 p-3 ${validationErrors.name ? 'is-invalid' : ''}`}
                   placeholder="Enter event name"
                   value={form.name}
                   onChange={(e) => {
@@ -1026,7 +1025,7 @@ const EventManager: React.FC = () => {
                     {validationErrors.name}
                   </div>
                 )}
-                <div className={`character - counter ${form.name.length > 90 ? 'warning' : ''} ${form.name.length >= 100 ? 'danger' : ''} `}>
+                <div className={`character-counter ${form.name.length > 90 ? 'warning' : ''} ${form.name.length >= 100 ? 'danger' : ''}`}>
                   {form.name.length} / 100
                 </div>
               </div>
@@ -1039,7 +1038,7 @@ const EventManager: React.FC = () => {
                   </label>
                   <input
                     type="date"
-                    className={`form - control form - control - dark ${validationErrors.date ? 'is-invalid' : ''} `}
+                    className={`form-control form-control-dark ${validationErrors.date ? 'is-invalid' : ''}`}
                     value={form.date}
                     min={getMinDate()}
                     onChange={(e) => {
@@ -1061,10 +1060,10 @@ const EventManager: React.FC = () => {
                   <div className="d-flex gap-2">
                     {/* Hours */}
                     <select
-                      className={`form - control form - control - dark ${validationErrors.time ? 'is-invalid' : ''} `}
+                      className={`form-control form-control-dark ${validationErrors.time ? 'is-invalid' : ''}`}
                       value={hour}
                       onChange={(e) => {
-                        const newTime = `${e.target.value || "01"}:${minute || "00"} ${meridian || "AM"} `;
+                        const newTime = `${e.target.value || "01"}:${minute || "00"} ${meridian || "AM"}`;
                         setForm({ ...form, time: newTime });
                         setValidationErrors({ ...validationErrors, time: validateTime(newTime) });
                       }}
@@ -1082,10 +1081,10 @@ const EventManager: React.FC = () => {
 
                     {/* Minutes */}
                     <select
-                      className={`form - control form - control - dark ${validationErrors.time ? 'is-invalid' : ''} `}
+                      className={`form-control form-control-dark ${validationErrors.time ? 'is-invalid' : ''}`}
                       value={minute}
                       onChange={(e) => {
-                        const newTime = `${hour || "01"}:${e.target.value || "00"} ${meridian || "AM"} `;
+                        const newTime = `${hour || "01"}:${e.target.value || "00"} ${meridian || "AM"}`;
                         setForm({ ...form, time: newTime });
                         setValidationErrors({ ...validationErrors, time: validateTime(newTime) });
                       }}
@@ -1100,10 +1099,10 @@ const EventManager: React.FC = () => {
 
                     {/* AM / PM */}
                     <select
-                      className={`form - control form - control - dark ${validationErrors.time ? 'is-invalid' : ''} `}
+                      className={`form-control form-control-dark ${validationErrors.time ? 'is-invalid' : ''}`}
                       value={meridian}
                       onChange={(e) => {
-                        const newTime = `${hour || "01"}:${minute || "00"} ${e.target.value || "AM"} `;
+                        const newTime = `${hour || "01"}:${minute || "00"} ${e.target.value || "AM"}`;
                         setForm({ ...form, time: newTime });
                         setValidationErrors({ ...validationErrors, time: validateTime(newTime) });
                       }}
@@ -1131,7 +1130,7 @@ const EventManager: React.FC = () => {
                     <i className="bi bi-geo-alt"></i>
                   </span>
                   <input
-                    className={`form - control form - control - dark ${validationErrors.venue ? 'is-invalid' : ''} `}
+                    className={`form-control form-control-dark ${validationErrors.venue ? 'is-invalid' : ''}`}
                     placeholder="Venue location"
                     value={form.venue}
                     onChange={(e) => {
@@ -1146,7 +1145,7 @@ const EventManager: React.FC = () => {
                     {validationErrors.venue}
                   </div>
                 )}
-                <div className={`character - counter ${form.venue.length > 180 ? 'warning' : ''} ${form.venue.length >= 200 ? 'danger' : ''} `}>
+                <div className={`character-counter ${form.venue.length > 180 ? 'warning' : ''} ${form.venue.length >= 200 ? 'danger' : ''}`}>
                   {form.venue.length} / 200
                 </div>
               </div>
@@ -1157,7 +1156,7 @@ const EventManager: React.FC = () => {
                   Event Description
                 </label>
                 <textarea
-                  className={`form - control form - control - dark ${validationErrors.description ? 'is-invalid' : ''} `}
+                  className={`form-control form-control-dark ${validationErrors.description ? 'is-invalid' : ''}`}
                   rows={3}
                   placeholder="Describe the event..."
                   value={form.description}
@@ -1172,7 +1171,7 @@ const EventManager: React.FC = () => {
                     {validationErrors.description}
                   </div>
                 )}
-                <div className={`character - counter ${form.description.length > 450 ? 'warning' : ''} ${form.description.length >= 500 ? 'danger' : ''} `}>
+                <div className={`character-counter ${form.description.length > 450 ? 'warning' : ''} ${form.description.length >= 500 ? 'danger' : ''}`}>
                   {form.description.length} / 500
                 </div>
               </div>
@@ -1199,7 +1198,7 @@ const EventManager: React.FC = () => {
                         Name <span className="required-asterisk">*</span>
                       </label>
                       <input
-                        className={`form - control form - control - dark form - control - sm ${validationErrors.contactPersons?.[i] ? 'is-invalid' : ''} `}
+                        className={`form-control form-control-dark form-control-sm ${validationErrors.contactPersons?.[i] ? 'is-invalid' : ''}`}
                         value={cp.name}
                         onChange={(e) => handleContactNameChange(e.target.value, i)}
                         maxLength={50}
@@ -1212,7 +1211,7 @@ const EventManager: React.FC = () => {
                       <div className="d-flex phone-input-group">
                         <span className="phone-prefix">+91</span>
                         <input
-                          className={`form - control form - control - dark form - control - sm phone - input ${validationErrors.contactPersons?.[i] ? 'is-invalid' : ''} `}
+                          className={`form-control form-control-dark form-control-sm phone-input ${validationErrors.contactPersons?.[i] ? 'is-invalid' : ''}`}
                           value={cp.phone}
                           onChange={(e) => handlePhoneChange(e.target.value, i)}
                           placeholder="9876543210"
@@ -1269,7 +1268,7 @@ const EventManager: React.FC = () => {
 
                 {/* Required Questions (uneditable) */}
                 {REQUIRED_REGISTRATION_QUESTIONS.map((question, i) => (
-                  <div key={`required - ${i} `} className="d-flex gap-2 align-items-center mb-2">
+                  <div key={`required-${i}`} className="d-flex gap-2 align-items-center mb-2">
                     <div className="flex-grow-1">
                       <label className="form-label text-secondary small">
                         Required Field {i + 1}
@@ -1293,13 +1292,13 @@ const EventManager: React.FC = () => {
 
                 {/* Custom Questions (editable) */}
                 {form.registrationQuestions.slice(REQUIRED_REGISTRATION_QUESTIONS.length).map((q, i) => (
-                  <div key={`custom - ${i} `} className="d-flex gap-2 align-items-end mb-2">
+                  <div key={`custom-${i}`} className="d-flex gap-2 align-items-end mb-2">
                     <div className="flex-grow-1">
                       <label className="form-label text-secondary small">
                         Custom Field {i + 1}
                       </label>
                       <input
-                        className={`form - control form - control - dark form - control - sm ${validationErrors.registrationQuestions?.[REQUIRED_REGISTRATION_QUESTIONS.length + i] ? 'is-invalid' : ''} `}
+                        className={`form-control form-control-dark form-control-sm ${validationErrors.registrationQuestions?.[REQUIRED_REGISTRATION_QUESTIONS.length + i] ? 'is-invalid' : ''}`}
                         value={q}
                         onChange={(e) => handleCustomQuestionChange(e.target.value, i)}
                         maxLength={200}
@@ -1326,7 +1325,7 @@ const EventManager: React.FC = () => {
                 {/* Display errors for registration questions */}
                 {validationErrors.registrationQuestions?.map((error, i) => (
                   error && (
-                    <div key={`error - ${i} `} className="invalid-feedback-custom mb-2">
+                    <div key={`error-${i}`} className="invalid-feedback-custom mb-2">
                       Field {i + 1}: {error}
                     </div>
                   )
@@ -1343,7 +1342,7 @@ const EventManager: React.FC = () => {
                     <i className="bi bi-whatsapp"></i>
                   </span>
                   <input
-                    className={`form - control form - control - dark ${validationErrors.whatsappGroupLink ? 'is-invalid' : ''} `}
+                    className={`form-control form-control-dark ${validationErrors.whatsappGroupLink ? 'is-invalid' : ''}`}
                     placeholder="https://chat.whatsapp.com/..."
                     value={form.whatsappGroupLink || ""}
                     onChange={(e) => {

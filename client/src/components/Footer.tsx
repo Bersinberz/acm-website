@@ -21,7 +21,7 @@ const CopyrightFooter: React.FC = () => {
         }
 
         .Copyrights { color: #000; }
-        .Copyrights .copyright-title { 
+        .Copyrights h2 { 
             font-size: 20px; 
             margin-bottom: 10px;
             font-weight: 600; 
@@ -37,11 +37,11 @@ const CopyrightFooter: React.FC = () => {
 
       <div className='cpoy-cont'>
         <div className='Copyrights'>
-          <p className="copyright-title">© 2025 SIST ACM SIGAI STUDENT CHAPTER</p>
+          <h2>© 2025 SIST ACM SIGAI STUDENT CHAPTER</h2>
           <p>
             Website developed by ADITYA SAI TEJA B |
             Designed by MANISRI VENKATESH |
-            Backend development: BHUVANESH and DEVENDRA REDDY |
+            Backend development: BHUVANESH and DEVENDRA REDDY | 
             Maintained by BERSIN S and RAM PRADEEP
           </p>
         </div>
