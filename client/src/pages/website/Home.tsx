@@ -1,6 +1,6 @@
-import React, { type FormEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import titlevedio from '../../assets/HomePage/Titlevedio.mp4';
-import { motion as m, AnimatePresence } from "framer-motion";
+import { motion as m } from "framer-motion";
 import { fadeIn } from '../../components/transitions';
 import ne from '../../assets/HomePage/new.png';
 import videoB from '../../assets/HomePage/SISTACMSIGAI.mp4';
@@ -14,168 +14,22 @@ import {
   FaTwitter,
   FaInstagram,
   FaLinkedin,
-  FaTimes,
-  FaPaperPlane,
-  FaExclamationCircle
 } from 'react-icons/fa';
-import { submitContactForm, type ContactFormData, type AdminSettings, getAdminSettings } from '../../services/website/Homeservice';
+import { type AdminSettings, getAdminSettings } from '../../services/website/Homeservice';
 import { FloatingOrb } from '../../components/StatusMessage';
 import CopyrightFooter from '../../components/Footer';
+import ContactModal from '../../components/ContactModal';
 
-// Validation types
-interface FormErrors {
-  Firstname?: string;
-  Lastname?: string;
-  Email?: string;
-  Mobile?: string;
-  Message?: string;
-}
-
-interface FormTouched {
-  Firstname?: boolean;
-  Lastname?: boolean;
-  Email?: boolean;
-  Mobile?: boolean;
-  Message?: boolean;
-}
 
 const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Controls the GlobalLoader
   const [statusVisible, setStatusVisible] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [statusType, setStatusType] = useState<"success" | "error">("success");
   const [adminSettings, setAdminSettings] = useState<AdminSettings | null>(null);
 
-  // Form state
-  const [formData, setFormData] = useState<ContactFormData>({
-    Firstname: '',
-    Lastname: '',
-    Email: '',
-    Mobile: '',
-    Message: ''
-  });
-
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<FormTouched>({});
-  const [isFormValid, setIsFormValid] = useState(false);
-
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen);
-    // Reset form when closing modal
-    if (isModalOpen) {
-      resetForm();
-    }
-  };
-
-  // Validation functions
-  const validateField = (name: keyof ContactFormData, value: string): string => {
-    switch (name) {
-      case 'Firstname':
-        if (!value.trim()) return 'First name is required';
-        if (value.length < 2) return 'First name must be at least 2 characters';
-        if (value.length > 50) return 'First name must be less than 50 characters';
-        if (!/^[A-Za-z\s]+$/.test(value)) return 'First name can only contain letters and spaces';
-        return '';
-
-      case 'Lastname':
-        if (!value.trim()) return 'Last name is required';
-        if (value.length < 2) return 'Last name must be at least 2 characters';
-        if (value.length > 50) return 'Last name must be less than 50 characters';
-        if (!/^[A-Za-z\s]+$/.test(value)) return 'Last name can only contain letters and spaces';
-        return '';
-
-      case 'Email':
-        if (!value.trim()) return 'Email is required';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address';
-        if (value.length > 100) return 'Email must be less than 100 characters';
-        return '';
-
-      case 'Mobile':
-        if (!value.trim()) return 'Mobile number is required';
-        if (!/^[0-9]{10}$/.test(value)) return 'Please enter a valid 10-digit mobile number';
-        return '';
-
-      case 'Message':
-        if (!value.trim()) return 'Message is required';
-        if (value.length < 10) return 'Message must be at least 10 characters';
-        if (value.length > 1000) return 'Message must be less than 1000 characters';
-        return '';
-
-      default:
-        return '';
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    let isValid = true;
-
-    Object.keys(formData).forEach((key) => {
-      const fieldName = key as keyof ContactFormData;
-      const error = validateField(fieldName, formData[fieldName]);
-      if (error) {
-        newErrors[fieldName] = error;
-        isValid = false;
-      }
-    });
-
-    setErrors(newErrors);
-    setIsFormValid(isValid);
-    return isValid;
-  };
-
-  // Update form validation when formData changes
-  useEffect(() => {
-    if (Object.keys(touched).length > 0) {
-      validateForm();
-    }
-  }, [formData, touched]);
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-
-    // Validate the field that just lost focus
-    const fieldName = name as keyof ContactFormData;
-    const error = validateField(fieldName, formData[fieldName]);
-    setErrors(prev => ({ ...prev, [fieldName]: error }));
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-
-    // For mobile field, only allow numbers
-    if (name === 'Mobile') {
-      const numericValue = value.replace(/\D/g, '').slice(0, 10);
-      setFormData(prev => ({ ...prev, [name]: numericValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
-
-    // Mark field as touched if it has an error and user is correcting
-    if (!touched[name as keyof FormTouched] && errors[name as keyof FormErrors]) {
-      setTouched(prev => ({ ...prev, [name]: true }));
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      Firstname: '',
-      Lastname: '',
-      Email: '',
-      Mobile: '',
-      Message: ''
-    });
-    setErrors({});
-    setTouched({});
-    setIsFormValid(false);
-  };
+  const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -186,83 +40,8 @@ const Home: React.FC = () => {
         console.error("Failed to load admin settings", err);
       }
     };
-
     fetchSettings();
   }, []);
-
-  const submitForm = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Mark all fields as touched to show all errors
-    const allTouched = Object.keys(formData).reduce((acc, key) => {
-      acc[key as keyof FormTouched] = true;
-      return acc;
-    }, {} as FormTouched);
-    setTouched(allTouched);
-
-    // Validate entire form
-    if (!validateForm()) {
-      setStatusType("error");
-      setStatusMessage("Please fix the errors in the form before submitting.");
-      setStatusVisible(true);
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await submitContactForm(formData);
-
-      setStatusType("success");
-      setStatusMessage(result.message || "Message sent successfully!");
-      setStatusVisible(true);
-
-      setIsModalOpen(false);
-      resetForm();
-    } catch (error: any) {
-      console.error("Form submission error:", error);
-
-      /**
-       * CASE 1: Server-side field validation errors
-       * { errors: { Email, Mobile, ... } }
-       */
-      if (error?.errors && typeof error.errors === "object") {
-        setErrors(error.errors);
-
-        // Mark errored fields as touched
-        const touchedFields: FormTouched = {};
-        Object.keys(error.errors).forEach((key) => {
-          touchedFields[key as keyof FormTouched] = true;
-        });
-        setTouched(prev => ({ ...prev, ...touchedFields }));
-
-        setStatusType("error");
-        setStatusMessage(error.message || "Please correct the highlighted fields.");
-        setStatusVisible(true);
-        return;
-      }
-
-      /**
-       * CASE 2: Server message only (429, duplicate, etc.)
-       */
-      if (error?.message) {
-        setStatusType("error");
-        setStatusMessage(error.message);
-        setStatusVisible(true);
-        return;
-      }
-
-      /**
-       * CASE 3: Fallback (network / unknown)
-       */
-      setStatusType("error");
-      setStatusMessage("Something went wrong. Please try again later.");
-      setStatusVisible(true);
-    }
-    finally {
-      setIsSubmitting(false);
-    }
-  };
 
   useEffect(() => {
     if (statusVisible) {
@@ -277,13 +56,24 @@ const Home: React.FC = () => {
     } else {
       document.body.style.overflow = "";
     }
-
     return () => {
       document.body.style.overflow = "";
     };
   }, [isModalOpen]);
 
-  // Add these styles to your existing style tag
+  // Handlers for Modal success/error states
+  const handleModalSuccess = (message: string) => {
+    setStatusType("success");
+    setStatusMessage(message);
+    setStatusVisible(true);
+  };
+
+  const handleModalError = (message: string) => {
+    setStatusType("error");
+    setStatusMessage(message);
+    setStatusVisible(true);
+  };
+
   const additionalStyles = `
     /* --- FORM VALIDATION STYLES --- */
     .inputbx.has-error input,
@@ -336,26 +126,6 @@ const Home: React.FC = () => {
       opacity: 0.5;
       cursor: not-allowed;
       box-shadow: none !important;
-    }
-    
-    .form-status {
-      text-align: center;
-      padding: 10px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-      font-weight: 600;
-    }
-    
-    .form-status.error {
-      background: rgba(239, 68, 68, 0.1);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-    
-    .form-status.success {
-      background: rgba(34, 197, 94, 0.1);
-      color: #22c55e;
-      border: 1px solid rgba(34, 197, 94, 0.3);
     }
   `;
 
@@ -497,40 +267,30 @@ const Home: React.FC = () => {
             color: #fff; font-size: 1.3rem; margin-bottom: 25px; text-transform: uppercase;
             letter-spacing: 1px; border-bottom: 2px solid #5CA0F2; display: inline-block; padding-bottom: 5px;
         }
-.contact-item {
-  display: flex;
-  align-items: flex-start;   /* NOT center */
-  gap: 14px;
-  margin-bottom: 18px;
-}gin-bottom: 18px;
-}
-.contact-item .icon {
-  width: 26px;               /* fixed column */
-  min-width: 26px;
-  font-size: 1.25rem;
-  color: #5CA0F2;
-
-  /* 🔥 THIS is the magic */
-  line-height: 1;            /* prevent vertical stretch */
-  margin-top: 2px;           /* aligns icon with first letter */
-}
-  
-.contact-text {
-  line-height: 1.6;
-}
-  .contact-text a {
-  color: #e0e0e0;
-  text-decoration: none;
-  font-weight: 500;
-  display: inline-block;
-}
+        .contact-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 14px;
+          margin-bottom: 18px;
+        }
+        .contact-item .icon {
+          width: 26px;
+          min-width: 26px;
+          font-size: 1.25rem;
+          color: #5CA0F2;
+          line-height: 1;
+          margin-top: 2px;
+        }
+        .contact-text { line-height: 1.6; }
+        .contact-text a {
+          color: #e0e0e0; text-decoration: none; font-weight: 500; display: inline-block;
+        }
         .contact-item p a, .contact-item > a {
             color: #e0e0e0; text-decoration: none; transition: color 0.3s; font-weight: 500; word-break: break-word;
         }
         .contact-item p a:hover, .contact-item > a:hover { color: #5CA0F2; }
         .footer-center { text-align: center; display: flex; flex-direction: column; align-items: center; }
         
-        /* FOOTER BRAND (Enhanced with Hero Style) */
         .footer-brand {
             font-size: 2.5rem; font-weight: 900; 
             margin-bottom: 15px; letter-spacing: 1px;
@@ -556,77 +316,42 @@ const Home: React.FC = () => {
         }
 
         .social-icon.twitter:hover { 
-            background: #1DA1F2; 
-            color: #fff; 
-            transform: translateY(-3px);
-            box-shadow: 0 0 20px rgba(29, 161, 242, 0.5);
-            border-color: #1DA1F2;
+            background: #1DA1F2; color: #fff; transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(29, 161, 242, 0.5); border-color: #1DA1F2;
         }
-
         .social-icon.instagram:hover { 
             background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); 
-            background-origin: border-box;
-            background-clip: border-box;
-            color: #fff; 
-            transform: translateY(-3px);
-            box-shadow: 0 0 20px rgba(214, 36, 159, 0.5);
-            border-color: transparent;
+            background-origin: border-box; background-clip: border-box; color: #fff; 
+            transform: translateY(-3px); box-shadow: 0 0 20px rgba(214, 36, 159, 0.5); border-color: transparent;
         }
-
         .social-icon.linkedin:hover { 
-            background: #0A66C2; 
-            color: #fff; 
-            transform: translateY(-3px);
-            box-shadow: 0 0 20px rgba(10, 102, 194, 0.5);
-            border-color: #0A66C2;
+            background: #0A66C2; color: #fff; transform: translateY(-3px);
+            box-shadow: 0 0 20px rgba(10, 102, 194, 0.5); border-color: #0A66C2;
         }
         .social-icon:hover { transform: translateY(-3px); background: #5CA0F2; color: #fff; }
         .footer-map iframe {
             width: 100%; height: 250px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        .cpoy-cont {
-            background: linear-gradient(45deg, #F5F7F6, #5CA0F2);
-            background-size: 300% 300%; animation: gradientShift 12s ease-in-out infinite;
-            padding: 20px; text-align: center; width: 100%;
-        }
-        .Copyrights { color: #000; }
-        .Copyrights h2 { font-size: 1rem; margin-bottom: 10px; font-weight: 800; }
-        .Copyrights p { font-size: 0.85rem; margin: 5px 0; font-weight: 600; line-height: 1.6; }
 
         /* --- MODAL --- */
         .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.85);
-          backdrop-filter: blur(15px);
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          padding-top: 120px;
-          z-index: 10000;
-          padding-left: 20px;
-          padding-right: 20px;
+          position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+          background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(15px);
+          display: flex; justify-content: center; align-items: flex-start;
+          padding-top: 120px; z-index: 10000; padding-left: 20px; padding-right: 20px;
         }
 
         .modal-content-styled {
             background: rgba(10, 15, 30, 0.7);
             padding: 40px; width: 100%; max-width: 800px; border-radius: 20px;
-            position: relative;
-            border: 1px solid rgba(59, 130, 246, 0.5);
+            position: relative; border: 1px solid rgba(59, 130, 246, 0.5);
             box-shadow: 0 0 50px rgba(59, 130, 246, 0.15), inset 0 0 20px rgba(59, 130, 246, 0.05);
             color: #fff; max-height: 90vh; overflow-y: auto;
-            display: flex; flex-direction: column;
-            overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none; 
+            display: flex; flex-direction: column; overflow-y: auto;
+            scrollbar-width: none; -ms-overflow-style: none; 
         }
-        .modal-content-styled::-webkit-scrollbar {
-          display: none;
-        }
+        .modal-content-styled::-webkit-scrollbar { display: none; }
 
         .close-modal {
             position: absolute; top: 20px; right: 20px;
@@ -647,11 +372,9 @@ const Home: React.FC = () => {
             color: #fff; text-transform: uppercase;
         }
 
-        /* GRADIENT TEXT CLASS (Used for Modal & Footer) */
         .hero-highlight {
             background: linear-gradient(135deg, #fff 0%, var(--primary-blue) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 20px var(--primary-glow));
         }
 
@@ -665,32 +388,23 @@ const Home: React.FC = () => {
         }
 
         .inputbx input, .inputbx textarea {
-            width: 100%; padding: 15px;
-            border: none; border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-            font-size: 1rem; color: #fff;
-            background: rgba(255,255,255,0.03); border-radius: 4px 4px 0 0;
+            width: 100%; padding: 15px; border: none; border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            font-size: 1rem; color: #fff; background: rgba(255,255,255,0.03); border-radius: 4px 4px 0 0;
             transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
         }
 
         .inputbx input:focus, .inputbx textarea:focus {
-            border-bottom: 2px solid var(--primary-blue);
-            background: rgba(59, 130, 246, 0.1);
-            box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.2);
-            outline: none;
+            border-bottom: 2px solid var(--primary-blue); background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.2); outline: none;
         }
 
         .submit-btn {
-            background: var(--primary-blue); color: #fff;
-            padding: 18px; border: none; border-radius: 8px;
+            background: var(--primary-blue); color: #fff; padding: 18px; border: none; border-radius: 8px;
             font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
-            cursor: pointer; width: 100%; margin-top: 15px;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+            cursor: pointer; width: 100%; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;
             transition: all 0.3s; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
-        .submit-btn:hover {
-            background: #2563eb; box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
-        }
-        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .submit-btn:hover { background: #2563eb; box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
 
         ${additionalStyles}
 
@@ -706,34 +420,18 @@ const Home: React.FC = () => {
         }
 
         @media (max-width: 768px) {
-            .main {
-              height: 70dvh;
-              min-height: 420px;
-            }
-
-            .main video {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-              object-position: center top;
-            }
-              .modal-overlay {
-                padding-top: 90px;
-              }
-          }
+            .main { height: 70dvh; min-height: 420px; }
+            .main video { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+            .modal-overlay { padding-top: 90px; }
+        }
       `}</style>
 
-      {/* --- HERO SECTION (NO TITLE OVERLAY) --- */}
+      {/* --- HERO SECTION --- */}
       <div className='main'>
         <video
           src={titlevedio}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          controls={false}
-          disablePictureInPicture
+          autoPlay loop muted playsInline preload="auto"
+          controls={false} disablePictureInPicture
           style={{ pointerEvents: "none" }}
         />
       </div>
@@ -743,25 +441,16 @@ const Home: React.FC = () => {
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='aboutsec'>
             <div className="tech-badge"><span className="tech-highlight">About </span>SIST ACM SIGAI</div>
-            <p className='about-paragraph'>
-              {adminSettings?.about}
-            </p>
+            <p className='about-paragraph'>{adminSettings?.about}</p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='main-about'>
-            <video
-              src={videoB}
-              autoPlay loop controls={false} muted playsInline
-              disablePictureInPicture={true}
-              style={{ pointerEvents: 'none' }}
-            />
+            <video src={videoB} autoPlay loop controls={false} muted playsInline disablePictureInPicture style={{ pointerEvents: 'none' }} />
           </m.div>
 
           <m.div variants={fadeIn("up", 0.4)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='mission'>
             <div className="tech-badge"><span className="tech-highlight">Our</span> Mission</div>
-            <p className='mission-paragraph'>
-              {adminSettings?.mission}
-            </p>
+            <p className='mission-paragraph'>{adminSettings?.mission}</p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='image-container'>
@@ -770,9 +459,7 @@ const Home: React.FC = () => {
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='vision'>
             <div className="tech-badge"><span className="tech-highlight">Our</span> Vision</div>
-            <p className='mission-paragraph'>
-              {adminSettings?.vision}
-            </p>
+            <p className='mission-paragraph'>{adminSettings?.vision}</p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" exit="exit" viewport={{ once: false, amount: 0.3 }} className='image-container'>
@@ -781,9 +468,7 @@ const Home: React.FC = () => {
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='ideology'>
             <div className="tech-badge"><span className="tech-highlight">Our</span> Ideology</div>
-            <p className='mission-paragraph'>
-              {adminSettings?.ideology}
-            </p>
+            <p className='mission-paragraph'>{adminSettings?.ideology}</p>
           </m.div>
 
           <m.div variants={fadeIn("up", 0.2)} initial="hidden" whileInView="show" viewport={{ once: false, amount: 0.3 }} className='image-container'>
@@ -799,11 +484,7 @@ const Home: React.FC = () => {
             <div className="contact-item">
               <span className="icon"><FaMapMarkerAlt /></span>
               <div className="contact-text">
-                <a
-                  href="https://www.sathyabama.ac.in"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a href="https://www.sathyabama.ac.in" target="_blank" rel="noopener noreferrer">
                   {adminSettings?.contact.location || ""}
                 </a>
               </div>
@@ -811,44 +492,29 @@ const Home: React.FC = () => {
             <div className="contact-item">
               <span className="icon"><FaEnvelope /></span>
               <div className="contact-text">
-                <a href={`mailto:${adminSettings?.contact.email}`}>
-                  {adminSettings?.contact.email}
-                </a>
+                <a href={`mailto:${adminSettings?.contact.email}`}>{adminSettings?.contact.email}</a>
               </div>
             </div>
             <div className="contact-item">
               <span className="icon"><FaPhoneAlt /></span>
               <div className="contact-text">
-                <a href={`tel:${adminSettings?.contact.phone}`}>
-                  {adminSettings?.contact.phone}
-                </a>
+                <a href={`tel:${adminSettings?.contact.phone}`}>{adminSettings?.contact.phone}</a>
               </div>
             </div>
           </div>
 
           <div className="footer-col footer-center">
             <div className="footer-brand">
-              <span className="hero-highlight">
-                {adminSettings?.orgName || "SIST ACM SIGAI"}
-              </span>
+              <span className="hero-highlight">{adminSettings?.orgName || "SIST ACM SIGAI"}</span>
             </div>
-
             <p className="cta-text">Have questions or want to collaborate?</p>
-
             <button className="write-us-btn" onClick={toggleModal}>
               Write to Us <FaEnvelope style={{ marginLeft: '8px', display: 'inline' }} />
             </button>
-
             <div className="social-icons">
-              <a href={adminSettings?.socials.twitter} target="_blank" aria-label="Twitter" className="social-icon twitter">
-                <FaTwitter />
-              </a>
-              <a href={adminSettings?.socials.instagram} target="_blank" aria-label="Instagram" className="social-icon instagram">
-                <FaInstagram />
-              </a>
-              <a href={adminSettings?.socials.linkedin} target="_blank" aria-label="LinkedIn" className="social-icon linkedin">
-                <FaLinkedin />
-              </a>
+              <a href={adminSettings?.socials.twitter} target="_blank" aria-label="Twitter" className="social-icon twitter"><FaTwitter /></a>
+              <a href={adminSettings?.socials.instagram} target="_blank" aria-label="Instagram" className="social-icon instagram"><FaInstagram /></a>
+              <a href={adminSettings?.socials.linkedin} target="_blank" aria-label="LinkedIn" className="social-icon linkedin"><FaLinkedin /></a>
             </div>
           </div>
 
@@ -866,152 +532,14 @@ const Home: React.FC = () => {
         <CopyrightFooter />
       </footer>
 
-      {/* --- ENHANCED MODAL WITH VALIDATION --- */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="modal-overlay">
-            <m.div
-              className="modal-content-styled"
-              initial={{ opacity: 0, scale: 0.8, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 50 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            >
-              <button className="close-modal" onClick={toggleModal}><FaTimes /></button>
-
-              <h3 className="modal-title">
-                Send <span className="hero-highlight">your Query</span>
-              </h3>
-
-              <form className="form" onSubmit={submitForm} noValidate>
-                <div className='formBx'>
-                  {/* First Name */}
-                  <div className={`inputbx ${errors.Firstname && touched.Firstname ? 'has-error' : ''}`}>
-                    <span>First Name</span>
-                    <input
-                      type='text'
-                      name='Firstname'
-                      value={formData.Firstname}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                      disabled={isSubmitting}
-                      autoComplete='off'
-                      maxLength={50}
-                    />
-                    {errors.Firstname && touched.Firstname && (
-                      <div className="error-message">
-                        <FaExclamationCircle className="error-icon" /> {errors.Firstname}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Last Name */}
-                  <div className={`inputbx ${errors.Lastname && touched.Lastname ? 'has-error' : ''}`}>
-                    <span>Last Name</span>
-                    <input
-                      type='text'
-                      name='Lastname'
-                      value={formData.Lastname}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                      autoComplete='off'
-                      disabled={isSubmitting}
-                      maxLength={50}
-                    />
-                    {errors.Lastname && touched.Lastname && (
-                      <div className="error-message">
-                        <FaExclamationCircle className="error-icon" /> {errors.Lastname}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div className={`inputbx ${errors.Email && touched.Email ? 'has-error' : ''}`}>
-                    <span>Email Address</span>
-                    <input
-                      type='email'
-                      name='Email'
-                      value={formData.Email}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                      autoComplete='off'
-                      disabled={isSubmitting}
-                      maxLength={100}
-                    />
-                    {errors.Email && touched.Email && (
-                      <div className="error-message">
-                        <FaExclamationCircle className="error-icon" /> {errors.Email}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Mobile */}
-                  <div className={`inputbx ${errors.Mobile && touched.Mobile ? 'has-error' : ''}`}>
-                    <span>Mobile Number</span>
-                    <input
-                      type='tel'
-                      name='Mobile'
-                      value={formData.Mobile}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      pattern="[0-9]{10}"
-                      autoComplete='off'
-                      inputMode="numeric"
-                      title="Enter a valid 10-digit mobile number"
-                      required
-                      disabled={isSubmitting}
-                      maxLength={10}
-                    />
-                    {errors.Mobile && touched.Mobile && (
-                      <div className="error-message">
-                        <FaExclamationCircle className="error-icon" /> {errors.Mobile}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Message */}
-                  <div className={`inputbx full-width ${errors.Message && touched.Message ? 'has-error' : ''}`}>
-                    <span>Your Message</span>
-                    <textarea
-                      name='Message'
-                      rows={4}
-                      value={formData.Message}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      autoComplete='off'
-                      required
-                      disabled={isSubmitting}
-                      maxLength={1000}
-                    ></textarea>
-                    <div className={`character-count ${formData.Message.length > 900 ? 'error' : formData.Message.length > 800 ? 'warning' : ''}`}>
-                      {formData.Message.length}/1000
-                    </div>
-                    {errors.Message && touched.Message && (
-                      <div className="error-message">
-                        <FaExclamationCircle className="error-icon" /> {errors.Message}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className='inputbx full-width'>
-                    <button
-                      type='submit'
-                      className="submit-btn"
-                      disabled={isSubmitting || (!isFormValid && Object.keys(touched).length > 0)}
-                    >
-                      {isSubmitting ? "TRANSMITTING..." : "Send Query"} <FaPaperPlane />
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </m.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* --- INJECT MODAL COMPONENT --- */}
+      <ContactModal
+        isOpen={isModalOpen}
+        onClose={toggleModal}
+        onSuccess={handleModalSuccess}
+        onError={handleModalError}
+        onLoading={setIsSubmitting} // Connects modal loading state to GlobalLoader
+      />
     </>
   );
 };
