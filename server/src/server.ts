@@ -94,7 +94,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // ========== RATE LIMITING ==========
-const apiLimiter = rateLimit({
+const   apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: isProduction ? 100 : 500,
     message: {
