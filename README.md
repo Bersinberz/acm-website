@@ -1,7 +1,7 @@
 <div align="center">
   <br />
   <a href="https://github.com/your-org/acm-website">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Association_for_Computing_Machinery_%28ACM%29_logo.svg" alt="Logo" width="120" height="120" style="background-color: white; border-radius: 50%; padding: 10px;">
+    <img src="https://raw.githubusercontent.com/Bersinberz/acm-website/main/client/src/assets/acm-logo.png" alt="ACM SIGAI Logo" width="140" height="140">
   </a>
 
   <br />
@@ -157,18 +157,6 @@ acm-website/
 - `npm run lint`: Validates the styling & rulesets across the platform.
 
 <br />
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are immensely appreciated. Feel free to check the issues page or actively deploy a Pull Request!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/EpicUpdate`)
-3. Commit your Changes (`git commit -m 'Added some EpicUpdate'`)
-4. Push to the Branch (`git push origin feature/EpicUpdate`)
-5. Open a Pull Request
-
----
 
 <p align="center">
   Built with ❤️ by the ACM SIGAI Team.
