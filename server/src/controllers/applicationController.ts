@@ -126,7 +126,11 @@ export const updateApplicationStatus = async (req: Request, res: Response) => {
     const { status } = req.body; // ✅ ONLY status
 
     /* ---- Validate ObjectId ---- */
-    if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+    const validId = Array.isArray(applicationId)
+      ? applicationId[0]
+      : applicationId;
+
+    if (!mongoose.Types.ObjectId.isValid(validId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid application ID",

@@ -53,7 +53,7 @@ export const getRecruitmentById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (Array.isArray(id) || !mongoose.Types.ObjectId.isValid(id)) {
       res.status(400).json({
         success: false,
         message: "Invalid recruitment ID format",
