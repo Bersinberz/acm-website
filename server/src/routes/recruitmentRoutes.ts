@@ -18,6 +18,6 @@ router.put("/:id/update", verifyAdminToken, updateRecruitment);
 router.delete("/:id/delete", verifyAdminToken, deleteRecruitment);
 
 /* Open / Close */
-router.patch("/:id/status", toggleRecruitmentStatus);
+router.patch("/:id/status", verifyAdminToken, toggleRecruitmentStatus);
 
 export default router;

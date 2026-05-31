@@ -27,10 +27,15 @@ const verifyAdminToken = (
 
     const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "acm_sigai_super_secret_key"
-    ) as JwtPayload;
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(500).json({
+        success: false,
+        message: "Server configuration error",
+      });
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
     // attach admin info to request
     req.admin = decoded;

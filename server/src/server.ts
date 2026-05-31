@@ -3,7 +3,8 @@ import dotenv from "dotenv";
 import connectDB from "./config/db";
 import path from "path";
 import cors from "cors";
-import fs from "fs";
+import helmet from "helmet";
+import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 
 import adminAuthRoutes from "./routes/authRoutes";
@@ -21,12 +22,13 @@ import eventRoute from "./routes/eventRoute";
 
 process.env.DOTENV_CONFIG_QUIET = "true";
 
+// In cPanel, env vars are injected directly — dotenv is only needed for local dev
 const NODE_ENV = process.env.NODE_ENV;
-const envFile = NODE_ENV === "production" ? ".env.production" : ".env.development";
-
-dotenv.config({
-    path: path.resolve(process.cwd(), envFile),
-});
+if (NODE_ENV !== "production") {
+    dotenv.config({
+        path: path.resolve(process.cwd(), ".env.development"),
+    });
+}
 
 if (!process.env.MONGO_URI) {
     console.error("❌ ERROR: MONGO_URI environment variable is required");
@@ -44,6 +46,7 @@ const isDevelopment = !isProduction;
 const app: Application = express();
 
 // ========== SECURITY ENHANCEMENTS ==========
+app.use(helmet());
 
 app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader('X-Frame-Options', 'DENY');
@@ -56,7 +59,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 const corsOptions = {
     origin: isProduction 
-        ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+        ? (process.env.ALLOWED_ORIGINS 
+            ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+            : ['https://sistsigai.acm.org'])
         : '*',
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
@@ -65,6 +70,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// ========== LOGGING ==========
+app.use(morgan(isProduction ? 'combined' : 'dev'));
 
 app.use(express.json({ 
     limit: "10mb"
@@ -116,18 +124,6 @@ const authLimiter = rateLimit({
     },
     skipSuccessfulRequests: true
 });
-
-// ========== FILE UPLOADS DIRECTORY ==========
-const uploadsPath = path.join(__dirname, "../uploads");
-if (!fs.existsSync(uploadsPath)) {
-    fs.mkdirSync(uploadsPath, { recursive: true });
-}
-
-app.use("/uploads", (req: Request, res: Response, next: NextFunction) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    next();
-}, express.static(uploadsPath));
 
 // ========== ROUTES ==========
 app.use("/api/home", homeRoutes);
@@ -259,7 +255,6 @@ const PORT = process.env.PORT || 5000;
         console.log(`🧭 Mode        : ${isProduction ? "PRODUCTION" : "DEVELOPMENT"}`);
         console.log(`🌍 Environment : ${process.env.NODE_ENV}`);
         console.log(`🔌 Port        : ${PORT}`);
-        console.log(`📁 Upload Dir  : ${process.env.UPLOAD_DIR || uploadsPath}`);
 
         await connectDB();
         console.log("🗄️  MongoDB    : Connected successfully");
@@ -267,8 +262,6 @@ const PORT = process.env.PORT || 5000;
         app.listen(PORT, () => {
             console.log("────────────────────────────────────────────");
             console.log(`✅ Server Status : RUNNING`);
-            console.log(`🏥 Health Check  : http://localhost:${PORT}/api/health`);
-            console.log(`📚 API Root      : http://localhost:${PORT}/api`);
 
             if (isDevelopment) {
                 console.log("🔁 Development Mode : ENABLED");
