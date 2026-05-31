@@ -22,13 +22,13 @@ import eventRoute from "./routes/eventRoute";
 
 process.env.DOTENV_CONFIG_QUIET = "true";
 
-// In cPanel, env vars are injected directly — dotenv is only needed for local dev
+// Load the appropriate .env file for both dev and production
 const NODE_ENV = process.env.NODE_ENV;
-if (NODE_ENV !== "production") {
-    dotenv.config({
-        path: path.resolve(process.cwd(), ".env.development"),
-    });
-}
+const envFile = NODE_ENV === "production" ? ".env.production" : ".env.development";
+
+dotenv.config({
+    path: path.resolve(process.cwd(), envFile),
+});
 
 if (!process.env.MONGO_URI) {
     console.error("❌ ERROR: MONGO_URI environment variable is required");
